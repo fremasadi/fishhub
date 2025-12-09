@@ -41,6 +41,11 @@ class Pembayaran extends Model
         return $this->belongsTo(Pesanan::class, 'transaksi_id');
     }
 
+    public function getSnapTokenAttribute(): ?string
+    {
+        return $this->payment_url;
+    }
+
     /**
      * Check if successful
      */

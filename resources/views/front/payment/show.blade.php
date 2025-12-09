@@ -226,40 +226,42 @@
 
 @endsection
 
-@push('scripts')
+@section('scripts')
+
+
 <script src="https://app.sandbox.midtrans.com/snap/snap.js"
 data-client-key="{{ config('midtrans.client_key') }}"></script>
 
 <script>
+
+
 document.addEventListener("DOMContentLoaded", function () {
-
-    const snapToken = "{{ $pembayaran->snap_token }}"; // ← FIX
-
-    @if($pembayaran->isPending())
+    
+    const snapToken = "{{ $pembayaran->payment_url }}";
+    
     const payBtn = document.getElementById("pay-button");
-
-    payBtn?.addEventListener("click", function () {
-
-        console.log("SNAP TOKEN:", snapToken); // debug
-
-        snap.pay(snapToken, {
-            onSuccess: () => location.reload(),
-            onPending: () => location.reload(),
-            onError: () => alert("Terjadi kesalahan."),
-            onClose: () => {},
+    
+    if (payBtn) {
+        payBtn.addEventListener("click", function () {
+            
+            if (typeof snap !== 'undefined' && snapToken) {
+                snap.pay(snapToken, {
+                    onSuccess: () => { console.log("SUCCESS"); location.reload(); },
+                    onPending: () => { console.log("PENDING"); location.reload(); },
+                    onError: () => { console.log("ERROR"); },
+                    onClose: () => { console.log("CLOSED"); }
+                });
+            } else {
+                alert("Snap not ready or token invalid");
+            }
         });
-    });
-
-    setInterval(checkPaymentStatus, 30000);
-    @endif
+    }
 });
 
 function checkPaymentStatus() {
     fetch("{{ route('payment.check-status', $pesanan->id) }}")
         .then(r => r.json())
-        .then(d => { 
-            if (d.is_paid) location.reload(); 
-        });
+        .then(d => { if (d.is_paid) location.reload(); });
 }
 
 function copyVA() {
@@ -267,5 +269,5 @@ function copyVA() {
     alert('Nomor VA berhasil disalin!');
 }
 </script>
+@endsection
 
-@endpush
