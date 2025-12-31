@@ -100,6 +100,13 @@
             </a>
         </li>
 
+        <li class="nav-item {{ request()->routeIs('peternak.pengambilan.*') ? 'active' : '' }}">
+    <a class="nav-link" href="{{ route('peternak.pengambilan.index') }}">
+        <i class="fas fa-box-open"></i>
+        <span>Pengambilan</span>
+    </a>
+</li>
+
         <!-- Nav Item - Riwayat Pembayaran -->
         <li class="nav-item {{ request()->routeIs('peternak.pembayaran.*') ? 'active' : '' }}">
             <a class="nav-link" href="{{ route('peternak.pembayaran.index') }}">

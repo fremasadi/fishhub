@@ -31,4 +31,9 @@ class Peternak extends Model
     {
         return $this->hasMany(StokBenih::class, 'peternak_id');
     }
+
+    public function pengambilans()
+{
+    return $this->hasMany(Pengambilan::class, 'peternak_id');
+}
 }

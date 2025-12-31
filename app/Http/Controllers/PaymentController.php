@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Models\Pengambilan;
 
 class PaymentController extends Controller
 {
@@ -29,8 +30,7 @@ class PaymentController extends Controller
         $cart = session()->get('cart', []);
 
         if (empty($cart)) {
-            return redirect()->route('cart.index')
-                ->with('error', 'Keranjang kosong!');
+            return redirect()->route('cart.index')->with('error', 'Keranjang kosong!');
         }
 
         DB::beginTransaction();
@@ -38,11 +38,11 @@ class PaymentController extends Controller
             // Get peternak_id dan stok_id dari cart
             $firstItem = reset($cart);
             $peternakId = $firstItem['peternak_id'];
-            
+
             // stok_id bisa dari key atau dari value
             // Cek struktur cart: apakah key adalah stok_id atau ada field tersendiri
             $firstKey = array_key_first($cart);
-            $stokId = is_numeric($firstKey) ? $firstKey : ($firstItem['stok_id'] ?? $firstItem['stok_benih_id'] ?? null);
+            $stokId = is_numeric($firstKey) ? $firstKey : $firstItem['stok_id'] ?? ($firstItem['stok_benih_id'] ?? null);
 
             // Calculate total
             $totalHarga = array_sum(array_column($cart, 'subtotal'));
@@ -60,8 +60,8 @@ class PaymentController extends Controller
             // Create Detail Pesanan untuk setiap item
             foreach ($cart as $cartKey => $item) {
                 // stok_id bisa dari key atau dari item
-                $itemStokId = is_numeric($cartKey) ? $cartKey : ($item['stok_id'] ?? $item['stok_benih_id'] ?? null);
-                
+                $itemStokId = is_numeric($cartKey) ? $cartKey : $item['stok_id'] ?? ($item['stok_benih_id'] ?? null);
+
                 if (!$itemStokId) {
                     throw new \Exception('Stok ID tidak ditemukan untuk item: ' . json_encode($item));
                 }
@@ -87,8 +87,8 @@ class PaymentController extends Controller
             // Item Details untuk Midtrans
             $itemDetails = [];
             foreach ($cart as $cartKey => $item) {
-                $itemStokId = is_numeric($cartKey) ? $cartKey : ($item['stok_id'] ?? $item['stok_benih_id'] ?? null);
-                
+                $itemStokId = is_numeric($cartKey) ? $cartKey : $item['stok_id'] ?? ($item['stok_benih_id'] ?? null);
+
                 $itemDetails[] = [
                     'id' => $itemStokId,
                     'price' => (int) $item['harga'],
@@ -98,12 +98,7 @@ class PaymentController extends Controller
             }
 
             // Create transaction via Midtrans Service
-            $result = $this->midtrans->createTransaction(
-                $orderId,
-                (int) $totalHarga,
-                $customerDetails,
-                $itemDetails
-            );
+            $result = $this->midtrans->createTransaction($orderId, (int) $totalHarga, $customerDetails, $itemDetails);
 
             if (!$result['success']) {
                 DB::rollBack();
@@ -126,17 +121,16 @@ class PaymentController extends Controller
             session()->forget('cart');
 
             // Redirect ke halaman payment
-            return redirect()->route('payment.show', $pesanan->id)
-                ->with('success', 'Pesanan berhasil dibuat! Silakan lanjutkan pembayaran.');
-
+            return redirect()->route('payment.show', $pesanan->id)->with('success', 'Pesanan berhasil dibuat! Silakan lanjutkan pembayaran.');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Payment Checkout Error: ' . $e->getMessage(), [
                 'cart_structure' => $cart,
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
-            
-            return back()->withInput()
+
+            return back()
+                ->withInput()
                 ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
@@ -153,21 +147,22 @@ class PaymentController extends Controller
 
         $pembayaran = $pesanan->pembayaran;
 
-        // Jika belum ada pembayaran
         if (!$pembayaran) {
-            return redirect()->route('cart.index')
-                ->with('error', 'Data pembayaran tidak ditemukan');
+            return redirect()->route('cart.index')->with('error', 'Data pembayaran tidak ditemukan');
         }
 
-        // Get latest status from Midtrans
+        // Ambil status terbaru dari Midtrans
         $statusResult = $this->midtrans->getTransactionStatus($pembayaran->order_id);
-        
+
         if ($statusResult['success']) {
             $this->updatePaymentStatus($pembayaran, $statusResult['data']);
             $pembayaran->refresh();
         }
 
-        return view('front.payment.show', compact('pesanan', 'pembayaran'));
+        // 🔽 FETCH DATA PENGAMBILAN
+        $pengambilan = $pesanan->pengambilan;
+
+        return view('front.payment.show', compact('pesanan', 'pembayaran', 'pengambilan'));
     }
 
     /**
@@ -183,7 +178,7 @@ class PaymentController extends Controller
         }
 
         $statusResult = $this->midtrans->getTransactionStatus($orderId);
-        
+
         if ($statusResult['success']) {
             $this->updatePaymentStatus($pembayaran, $statusResult['data']);
         }
@@ -206,7 +201,7 @@ class PaymentController extends Controller
             }
 
             $pembayaran = Pembayaran::where('order_id', $request->order_id)->first();
-            
+
             if (!$pembayaran) {
                 Log::error('Payment not found for callback', ['order_id' => $request->order_id]);
                 return response()->json(['message' => 'Payment not found'], 404);
@@ -215,7 +210,6 @@ class PaymentController extends Controller
             $this->updatePaymentStatus($pembayaran, $request->all());
 
             return response()->json(['message' => 'Callback processed']);
-
         } catch (\Exception $e) {
             Log::error('Midtrans Callback Error: ' . $e->getMessage());
             return response()->json(['message' => $e->getMessage()], 500);
@@ -231,18 +225,21 @@ class PaymentController extends Controller
             $pembayaran = $pesanan->pembayaran;
 
             if (!$pembayaran) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Data pembayaran tidak ditemukan',
-                ], 404);
+                return response()->json(
+                    [
+                        'success' => false,
+                        'message' => 'Data pembayaran tidak ditemukan',
+                    ],
+                    404,
+                );
             }
 
             $statusResult = $this->midtrans->getTransactionStatus($pembayaran->order_id);
-            
+
             if ($statusResult['success']) {
                 $this->updatePaymentStatus($pembayaran, $statusResult['data']);
                 $pembayaran->refresh();
-                
+
                 return response()->json([
                     'success' => true,
                     'status' => $pembayaran->transaction_status,
@@ -251,18 +248,23 @@ class PaymentController extends Controller
                 ]);
             }
 
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal mengecek status',
-            ], 500);
-            
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => 'Gagal mengecek status',
+                ],
+                500,
+            );
         } catch (\Exception $e) {
             Log::error('Error checking payment status: ' . $e->getMessage());
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Terjadi kesalahan',
-            ], 500);
+
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => 'Terjadi kesalahan',
+                ],
+                500,
+            );
         }
     }
 
@@ -271,7 +273,7 @@ class PaymentController extends Controller
      */
     public function history()
     {
-        $pesanans = Pesanan::with(['details.stokBenih', 'pembayaran', 'peternak.user'])
+        $pesanans = Pesanan::with(['details.stokBenih', 'pembayaran', 'peternak.user', 'pengambilan'])
             ->where('pembudidaya_id', Auth::id())
             ->orderBy('created_at', 'desc')
             ->paginate(10);
@@ -284,12 +286,12 @@ class PaymentController extends Controller
      */
     private function updatePaymentStatus($pembayaran, $data)
     {
-        $transactionStatus = $data->transaction_status ?? $data['transaction_status'] ?? 'pending';
-        $fraudStatus = $data->fraud_status ?? $data['fraud_status'] ?? null;
-        $paymentType = $data->payment_type ?? $data['payment_type'] ?? null;
+        $transactionStatus = $data->transaction_status ?? ($data['transaction_status'] ?? 'pending');
+        $fraudStatus = $data->fraud_status ?? ($data['fraud_status'] ?? null);
+        $paymentType = $data->payment_type ?? ($data['payment_type'] ?? null);
 
         $updateData = [
-            'transaction_id' => $data->transaction_id ?? $data['transaction_id'] ?? null,
+            'transaction_id' => $data->transaction_id ?? ($data['transaction_id'] ?? null),
             'transaction_status' => $transactionStatus,
             'fraud_status' => $fraudStatus,
             'payment_type' => $paymentType,
@@ -301,8 +303,8 @@ class PaymentController extends Controller
             $vaNumbers = $data->va_numbers ?? $data['va_numbers'];
             if (!empty($vaNumbers)) {
                 $vaNumber = is_array($vaNumbers) ? $vaNumbers[0] : $vaNumbers[0];
-                $updateData['bank'] = $vaNumber->bank ?? $vaNumber['bank'] ?? null;
-                $updateData['va_number'] = $vaNumber->va_number ?? $vaNumber['va_number'] ?? null;
+                $updateData['bank'] = $vaNumber->bank ?? ($vaNumber['bank'] ?? null);
+                $updateData['va_number'] = $vaNumber->va_number ?? ($vaNumber['va_number'] ?? null);
             }
         }
 
@@ -314,16 +316,27 @@ class PaymentController extends Controller
         // Settlement time & Update Pesanan Status
         if ($transactionStatus === 'settlement' || $transactionStatus === 'capture') {
             $updateData['settlement_time'] = now();
-            
+
             $pesanan = $pembayaran->pesanan;
             $pesanan->update(['status_pesanan' => 'Dibayar']);
+
+            Pengambilan::firstOrCreate(
+                ['pesanan_id' => $pesanan->id],
+                [
+                    'pembudidaya_id' => $pesanan->pembudidaya_id,
+                    'peternak_id' => $pesanan->peternak_id,
+                    'status_pengambilan' => 'Menunggu',
+                    'tanggal_pengambilan' => null,
+                    'catatan' => 'Menunggu konfirmasi pengambilan',
+                ],
+            );
 
             // Update stok benih (kurangi)
             foreach ($pesanan->details as $detail) {
                 $stok = $detail->stokBenih;
                 if ($stok && $stok->jumlah >= $detail->qty) {
                     $stok->decrement('jumlah', $detail->qty);
-                    
+
                     // Update status stok jika habis
                     if ($stok->jumlah <= 0) {
                         $stok->update(['status_stok' => 'Habis']);
@@ -333,7 +346,7 @@ class PaymentController extends Controller
 
             Log::info('Payment successful', [
                 'order_id' => $pembayaran->order_id,
-                'pesanan_id' => $pesanan->id
+                'pesanan_id' => $pesanan->id,
             ]);
         }
 
@@ -344,7 +357,7 @@ class PaymentController extends Controller
 
             Log::info('Payment failed', [
                 'order_id' => $pembayaran->order_id,
-                'status' => $transactionStatus
+                'status' => $transactionStatus,
             ]);
         }
 

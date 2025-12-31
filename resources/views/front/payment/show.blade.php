@@ -35,6 +35,19 @@
             <span class="badge bg-{{ $pembayaran->getStatusBadgeClass() }} px-3 py-2 fs-6">
                 {{ $pembayaran->getStatusLabel() }}
             </span>
+
+            @if($pembayaran->isSuccess() && isset($pengambilan))
+                <span class="badge
+                    @if($pengambilan->status_pengambilan === 'Menunggu') bg-warning
+                    @elseif($pengambilan->status_pengambilan === 'Siap Diambil') bg-info
+                    @elseif($pengambilan->status_pengambilan === 'Diterima') bg-success
+                    @else bg-secondary
+                    @endif
+                    px-3 py-2 fs-6 ms-2
+                ">
+                    Pengambilan: {{ $pengambilan->status_pengambilan }}
+                </span>
+            @endif
         </div>
 
         @if(session('success'))
@@ -68,8 +81,6 @@
                                 <span>{{ $pembayaran->transaction_id }}</span>
                             </li>
                             @endif
-
-                           
 
                             <li class="list-group-item d-flex justify-content-between">
                                 <span>Metode Pembayaran</span>
@@ -131,7 +142,7 @@
                             <div>
                                 <div class="fw-bold">{{ $detail->stokBenih->jenis ?? '-' }}</div>
                                 <small class="text-muted">
-                                    Ukuran: {{ $detail->stokBenih->ukuran ?? '-' }}  
+                                    Ukuran: {{ $detail->stokBenih->ukuran ?? '-' }}
                                     • Jumlah: {{ $detail->qty }}
                                 </small>
                             </div>
@@ -236,14 +247,14 @@ data-client-key="{{ config('midtrans.client_key') }}"></script>
 
 
 document.addEventListener("DOMContentLoaded", function () {
-    
+
     const snapToken = "{{ $pembayaran->payment_url }}";
-    
+
     const payBtn = document.getElementById("pay-button");
-    
+
     if (payBtn) {
         payBtn.addEventListener("click", function () {
-            
+
             if (typeof snap !== 'undefined' && snapToken) {
                 snap.pay(snapToken, {
                     onSuccess: () => { console.log("SUCCESS"); location.reload(); },

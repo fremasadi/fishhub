@@ -12,7 +12,7 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\Admin\StokBenihController as AdminStokBenihController;
 use App\Http\Controllers\Admin\PesananController as AdminPesananController;
 use App\Http\Controllers\Peternak\PesananController as PeternakPesananController;
-
+use App\Http\Controllers\Peternak\PengambilanController;
 
 Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
 
@@ -36,6 +36,18 @@ Route::middleware(['role:peternak'])->group(function () {
     Route::get('peternak/pembayaran', [App\Http\Controllers\Peternak\PembayaranController::class, 'index'])
         ->name('peternak.pembayaran.index');
 
+    Route::get('peternak/pengambilan', [PengambilanController::class, 'index'])
+        ->name('peternak.pengambilan.index');
+
+    Route::get('peternak/pengambilan/{pengambilan}', [PengambilanController::class, 'show'])
+        ->name('peternak.pengambilan.show');
+
+    Route::post('peternak/pengambilan/{pengambilan}/ready', [PengambilanController::class, 'markReady'])
+        ->name('peternak.pengambilan.ready');
+
+    Route::post('peternak/pengambilan/{pengambilan}/confirm', [PengambilanController::class, 'confirm'])
+        ->name('peternak.pengambilan.confirm');
+
 });
 
 // Route::get('/dashboard', function () {
@@ -56,15 +68,15 @@ Route::middleware('auth')->group(function () {
     // Checkout from cart
     Route::post('/payment/checkout', [PaymentController::class, 'processCheckout'])
         ->name('payment.checkout');
-    
+
     // Show payment page
     Route::get('/payment/{pesanan}', [PaymentController::class, 'show'])
         ->name('payment.show');
-    
+
     // Check payment status (AJAX)
     Route::get('/payment/{pesanan}/check-status', [PaymentController::class, 'checkStatus'])
         ->name('payment.check-status');
-    
+
     // Order history
     Route::get('/my-orders', [PaymentController::class, 'history'])
         ->name('payment.history');

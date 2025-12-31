@@ -80,5 +80,10 @@ class Pesanan extends Model
     {
         return in_array($this->status_pesanan, ['Dibayar', 'Selesai']);
     }
+
+    public function pengambilan()
+{
+    return $this->hasOne(Pengambilan::class, 'pesanan_id');
+}
 }
 
