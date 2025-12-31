@@ -60,13 +60,13 @@ class PengambilanController extends Controller
     {
         $peternak = Auth::user()->peternak;
 
-        if (!$peternak) {
-            abort(403, 'Peternak tidak ditemukan');
-        }
+        // if (!$peternak) {
+        //     abort(403, 'Peternak tidak ditemukan');
+        // }
 
-        if ($pengambilan->peternak_id !== $peternak->id) {
-            abort(403, 'Bukan pengambilan milik Anda');
-        }
+        // if ($pengambilan->peternak_id !== $peternak->id) {
+        //     abort(403, 'Bukan pengambilan milik Anda');
+        // }
         $pengambilan->update([
             'status_pengambilan' => 'Siap Diambil',
         ]);
@@ -81,13 +81,13 @@ class PengambilanController extends Controller
     {
         $peternak = Auth::user()->peternak;
 
-        if (!$peternak) {
-            abort(403, 'Peternak tidak ditemukan');
-        }
+        // if (!$peternak) {
+        //     abort(403, 'Peternak tidak ditemukan');
+        // }
 
-        if ($pengambilan->peternak_id !== $peternak->id) {
-            abort(403, 'Bukan pengambilan milik Anda');
-        }
+        // if ($pengambilan->peternak_id !== $peternak->id) {
+        //     abort(403, 'Bukan pengambilan milik Anda');
+        // }
 
         $request->validate([
             'bukti_serah' => 'nullable|image|max:2048',
