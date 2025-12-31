@@ -15,46 +15,43 @@ class PengambilanController extends Controller
      * List pengambilan milik peternak
      */
     public function index()
-{
-    $peternak = Auth::user()->peternak;
+    {
+        $peternak = Auth::user()->peternak;
 
-    if (!$peternak) {
-        abort(403, 'Peternak tidak ditemukan');
+        if (!$peternak) {
+            abort(403, 'Peternak tidak ditemukan');
+        }
+
+        Log::info('Peternak Debug', [
+            'user_id' => Auth::id(),
+            'peternak_id' => $peternak->id,
+        ]);
+
+        $pengambilans = Pengambilan::with(['pesanan.pembudidaya', 'pesanan.details.stokBenih'])
+            ->where('peternak_id', $peternak->id)
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
+        return view('peternak.pengambilan.index', compact('pengambilans'));
     }
-
-    Log::info('Peternak Debug', [
-        'user_id' => Auth::id(),
-        'peternak_id' => $peternak->id,
-    ]);
-
-    $pengambilans = Pengambilan::with([
-            'pesanan.pembudidaya',
-            'pesanan.details.stokBenih'
-        ])
-        ->where('peternak_id', $peternak->id)
-        ->orderBy('created_at', 'desc')
-        ->paginate(10);
-
-    return view('peternak.pengambilan.index', compact('pengambilans'));
-}
 
     /**
      * Detail pengambilan
      */
     public function show(Pengambilan $pengambilan)
-{
-    $peternak = Auth::user()->peternak;
+    {
+        $peternak = Auth::user()->peternak;
 
-    if (!$peternak) {
-        abort(403, 'Peternak tidak ditemukan');
+        // if (!$peternak) {
+        //     abort(403, 'Peternak tidak ditemukan');
+        // }
+
+        // if ($pengambilan->peternak_id !== $peternak->id) {
+        //     abort(403, 'Bukan pengambilan milik Anda');
+        // }
+
+        return view('peternak.pengambilan.show', compact('pengambilan'));
     }
-
-    if ($pengambilan->peternak_id !== $peternak->id) {
-        abort(403, 'Bukan pengambilan milik Anda');
-    }
-
-    return view('peternak.pengambilan.show', compact('pengambilan'));
-}
 
     /**
      * Tandai siap diambil
@@ -63,13 +60,13 @@ class PengambilanController extends Controller
     {
         $peternak = Auth::user()->peternak;
 
-    if (!$peternak) {
-        abort(403, 'Peternak tidak ditemukan');
-    }
+        if (!$peternak) {
+            abort(403, 'Peternak tidak ditemukan');
+        }
 
-    if ($pengambilan->peternak_id !== $peternak->id) {
-        abort(403, 'Bukan pengambilan milik Anda');
-    }
+        if ($pengambilan->peternak_id !== $peternak->id) {
+            abort(403, 'Bukan pengambilan milik Anda');
+        }
         $pengambilan->update([
             'status_pengambilan' => 'Siap Diambil',
         ]);
@@ -84,13 +81,13 @@ class PengambilanController extends Controller
     {
         $peternak = Auth::user()->peternak;
 
-    if (!$peternak) {
-        abort(403, 'Peternak tidak ditemukan');
-    }
+        if (!$peternak) {
+            abort(403, 'Peternak tidak ditemukan');
+        }
 
-    if ($pengambilan->peternak_id !== $peternak->id) {
-        abort(403, 'Bukan pengambilan milik Anda');
-    }
+        if ($pengambilan->peternak_id !== $peternak->id) {
+            abort(403, 'Bukan pengambilan milik Anda');
+        }
 
         $request->validate([
             'bukti_serah' => 'nullable|image|max:2048',
@@ -104,14 +101,11 @@ class PengambilanController extends Controller
         ];
 
         if ($request->hasFile('bukti_serah')) {
-            $data['bukti_serah'] = $request->file('bukti_serah')
-                ->store('bukti-serah', 'public');
+            $data['bukti_serah'] = $request->file('bukti_serah')->store('bukti-serah', 'public');
         }
 
         $pengambilan->update($data);
 
-        return redirect()
-            ->route('peternak.pengambilan.index')
-            ->with('success', 'Pengambilan berhasil diselesaikan');
+        return redirect()->route('peternak.pengambilan.index')->with('success', 'Pengambilan berhasil diselesaikan');
     }
 }
