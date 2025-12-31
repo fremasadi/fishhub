@@ -140,11 +140,6 @@ class PaymentController extends Controller
      */
     public function show(Pesanan $pesanan)
     {
-        // Cek kepemilikan pesanan
-        if ($pesanan->pembudidaya_id !== Auth::id()) {
-            abort(403, 'Unauthorized');
-        }
-
         $pembayaran = $pesanan->pembayaran;
 
         if (!$pembayaran) {
