@@ -61,7 +61,7 @@
             </a>
         </li>
 
-        <!-- Nav Item - Pesanan -->
+        {{-- <!-- Nav Item - Pesanan -->
         <li class="nav-item {{ request()->routeIs('admin.pesanan.*') ? 'active' : '' }}">
             <a class="nav-link" href="{{ route('admin.pesanan.index') }}">
                 <i class="fas fa-fw fa-shopping-cart"></i>
@@ -75,7 +75,7 @@
                 <i class="fas fa-fw fa-money-bill-wave"></i>
                 <span>Pembayaran</span>
             </a>
-        </li>
+        </li> --}}
     @endif
 
     @if (Auth::check() && Auth::user()->role === 'peternak')
@@ -85,11 +85,11 @@
         </div>
 
         <!-- Nav Item - Stok Benih -->
-        <li class="nav-item {{ request()->routeIs('benih.*') ? 'active' : '' }}">
+        {{-- <li class="nav-item {{ request()->routeIs('benih.*') ? 'active' : '' }}">
             <a class="nav-link" href="{{ route('benih.index') }}">
                 <i class="fas fa-fw fa-fish"></i>
-                <span>Stok Benih</span>
-            </a>
+                <span>Stok</span>
+            </a>s
         </li>
 
         <!-- Nav Item - Pesanan -->
@@ -101,11 +101,11 @@
         </li>
 
         <li class="nav-item {{ request()->routeIs('peternak.pengambilan.*') ? 'active' : '' }}">
-    <a class="nav-link" href="{{ route('peternak.pengambilan.index') }}">
-        <i class="fas fa-box-open"></i>
-        <span>Pengambilan</span>
-    </a>
-</li>
+            <a class="nav-link" href="{{ route('peternak.pengambilan.index') }}">
+                <i class="fas fa-box-open"></i>
+                <span>Pengambilan</span>
+            </a>
+        </li>
 
         <!-- Nav Item - Riwayat Pembayaran -->
         <li class="nav-item {{ request()->routeIs('peternak.pembayaran.*') ? 'active' : '' }}">
@@ -113,7 +113,7 @@
                 <i class="fas fa-fw fa-credit-card"></i>
                 <span>Riwayat Pembayaran</span>
             </a>
-        </li>
+        </li> --}}
     @endif
 
     <!-- Divider -->

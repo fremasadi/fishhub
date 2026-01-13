@@ -60,7 +60,7 @@
         </div>
     </div>
 
-    <!-- Total Pendapatan Card -->
+    {{-- <!-- Total Pendapatan Card -->
     <div class="col-xl-3 col-md-6 mb-4">
         <div class="card border-left-warning shadow h-100 py-2">
             <div class="card-body">
@@ -194,7 +194,7 @@
                         <span class="text-xs font-weight-bold">{{ $data['pembayaranSuccess'] }}</span>
                     </div>
                     <div class="progress mb-3" style="height: 20px;">
-                        <div class="progress-bar bg-success" role="progressbar" 
+                        <div class="progress-bar bg-success" role="progressbar"
                             style="width: {{ $data['totalPesanan'] > 0 ? ($data['pembayaranSuccess'] / $data['totalPesanan'] * 100) : 0 }}%">
                         </div>
                     </div>
@@ -205,7 +205,7 @@
                         <span class="text-xs font-weight-bold">{{ $data['pembayaranPending'] }}</span>
                     </div>
                     <div class="progress mb-3" style="height: 20px;">
-                        <div class="progress-bar bg-warning" role="progressbar" 
+                        <div class="progress-bar bg-warning" role="progressbar"
                             style="width: {{ $data['totalPesanan'] > 0 ? ($data['pembayaranPending'] / $data['totalPesanan'] * 100) : 0 }}%">
                         </div>
                     </div>
@@ -304,6 +304,6 @@
                 @endforelse
             </div>
         </div>
-    </div>
+    </div> --}}
 
 </div>
