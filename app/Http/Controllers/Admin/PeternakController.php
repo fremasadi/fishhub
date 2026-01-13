@@ -77,10 +77,15 @@ class PeternakController extends Controller
      * Display the specified resource.
      */
     public function show(Peternak $peternak)
-    {
-        $peternak->load('user');
-        return view('admin.peternaks.show', compact('peternak'));
-    }
+{
+    $peternak->load([
+        'user',
+        'stokBenihs',
+        'pengambilans'
+    ]);
+
+    return view('admin.peternaks.show', compact('peternak'));
+}
 
     /**
      * Show the form for editing the specified resource.
