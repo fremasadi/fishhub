@@ -21,7 +21,7 @@
     @elseif (Auth::user()->role === 'peternak')
         @include('dashboard.partials.peternak-stats')
     @else
-        <h1>Tidak Ada Data</h1>
+        <h1>Tidak Ada Data Untuk Role Ini Yang Anda Sedang Login</h1>
     @endif
 
 </div>
