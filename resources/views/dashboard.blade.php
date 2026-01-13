@@ -7,7 +7,7 @@
     <!-- Page Heading -->
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
         <h1 class="h3 mb-0 text-gray-800">
-            Dashboard {{ Auth::user()->role === 'admin' ? 'Admin' : 'Peternak' }}
+            Dashboard {{ Auth::user()->role === 'admin' ? 'Admin Dinas' : 'Peternak' }}
         </h1>
         @if(Auth::user()->role === 'peternak')
             <span class="badge badge-primary p-2">
@@ -18,8 +18,10 @@
 
     @if(Auth::user()->role === 'admin')
         @include('dashboard.partials.admin-stats')
-    @else
+    @elseif (Auth::user()->role === 'peternak')
         @include('dashboard.partials.peternak-stats')
+    @else
+        <h1>Tidak Ada Data</h1>
     @endif
 
 </div>

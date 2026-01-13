@@ -8,7 +8,7 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                            Total Users
+                            Total Pengguna
                         </div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $data['totalUsers'] }}</div>
                     </div>
@@ -46,7 +46,7 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                            Stok Benih Tersedia
+                            Semua Stok Peternak
                         </div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">
                             {{ number_format($data['totalBenih']) }} <small>ekor</small>

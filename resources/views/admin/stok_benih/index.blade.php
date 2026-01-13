@@ -1,96 +1,90 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container-fluid">
+    <div class="container-fluid">
 
-    <h1 class="h3 mb-4">Daftar Stok Benih</h1>
+        <h1 class="h3 mb-4">Daftar Stok Peternak</h1>
 
-    <div class="card shadow">
-        <div class="card-body">
+        <div class="card shadow">
+            <div class="card-body">
 
-            <div class="table-responsive">
-                <table class="table table-hover align-middle text-center">
-                    <thead class="table-light">
-                        <tr>
-                            <th>#</th>
-                            <th>Peternak</th>
-                            <th>Jenis</th>
-                            <th>Ukuran</th>
-                            <th>Kualitas</th>
-                            <th>Jumlah</th>
-                            <th>Harga</th>
-                            <th>Stok</th>
-                            <!-- <th>Validasi</th> -->
-                            <th>Tanggal Input</th>
-                            <th>Gambar</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        @forelse ($stok as $item)
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle text-center">
+                        <thead class="table-light">
                             <tr>
-                                <td>{{ $loop->iteration + ($stok->currentPage() - 1) * $stok->perPage() }}</td>
-
-                                <td>{{ $item->peternak->user->name }}</td>
-
-                                <td>{{ $item->jenis }}</td>
-
-                                <td>{{ $item->ukuran }} cm</td>
-
-                                <td>{{ ucfirst($item->kualitas) }}</td>
-
-                                <td>{{ number_format($item->jumlah) }}</td>
-
-                                <td>Rp {{ number_format($item->harga, 0, ',', '.') }}</td>
-
-                                <td>
-                                    @if ($item->status_stok === 'tersedia')
-                                        <span>Tersedia</span>
-                                    @else
-                                        <span>Habis</span>
-                                    @endif
-                                </td>
-
-                                <!-- <td>
-                                    @if ($item->status_validasi === 'disetujui')
-                                        <span class="badge bg-success">Disetujui</span>
-                                    @elseif ($item->status_validasi === 'pending')
-                                        <span class="badge bg-warning">Pending</span>
-                                    @else
-                                        <span class="badge bg-danger">Ditolak</span>
-                                    @endif
-                                </td> -->
-
-                                <td>{{ \Carbon\Carbon::parse($item->tanggal_input)->format('d M Y') }}</td>
-
-                                <td>
-                                    @if($item->image)
-                                        <img src="{{ asset('storage/' . $item->image) }}" 
-                                             alt="gambar" width="60" height="60"
-                                             style="object-fit: cover;" class="rounded">
-                                    @else
-                                        <span class="text-muted">-</span>
-                                    @endif
-                                </td>
+                                <th>#</th>
+                                <th>Peternak</th>
+                                <th>Jenis</th>
+                                <th>Ukuran</th>
+                                <th>Kualitas</th>
+                                <th>Jumlah</th>
+                                <th>Harga</th>
+                                <th>Stok</th>
+                                <th>Tanggal Input</th>
+                                <th>Gambar</th>
                             </tr>
+                        </thead>
 
-                        @empty
-                            <tr>
-                                <td colspan="11" class="text-muted py-3">
-                                    Belum ada data stok benih.
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+                        <tbody>
+                            @forelse ($stok as $item)
+                                <tr>
+                                    <td>{{ $loop->iteration + ($stok->currentPage() - 1) * $stok->perPage() }}</td>
+                                    <td>{{ $item->peternak->user->name }}</td>
+                                    <td>{{ $item->jenis }}</td>
+                                    <td>{{ $item->ukuran }} cm</td>
+                                    <td>{{ ucfirst($item->kualitas) }}</td>
+                                    <td>{{ number_format($item->jumlah) }}</td>
+                                    <td>Rp {{ number_format($item->harga, 0, ',', '.') }}</td>
+                                    <td>{{ $item->status_stok === 'tersedia' ? 'Tersedia' : 'Habis' }}</td>
+                                    <td>{{ \Carbon\Carbon::parse($item->tanggal_input)->format('d M Y') }}</td>
 
-            <div class="mt-3">
+                                    <td>
+                                        @if ($item->image)
+                                            <img src="{{ asset('storage/' . $item->image) }}" width="60" height="60"
+                                                class="rounded shadow-sm" style="object-fit: cover; cursor:pointer"
+                                                data-toggle="modal" data-target="#imageModal-{{ $item->id }}">
+                                        @else
+                                            <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="10" class="text-muted py-3">
+                                        Belum ada data stok peternak
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                    @foreach ($stok as $item)
+                        @if ($item->image)
+                            <div class="modal fade" id="imageModal-{{ $item->id }}" tabindex="-1" role="dialog">
+                                <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+                                    <div class="modal-content">
+
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Gambar Stok Benih</h5>
+                                            <button type="button" class="close" data-dismiss="modal">
+                                                <span>&times;</span>
+                                            </button>
+                                        </div>
+
+                                        <div class="modal-body text-center">
+                                            <img src="{{ asset('storage/' . $item->image) }}" class="img-fluid rounded">
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+                    @endforeach
+                </div>
+
                 {{ $stok->links() }}
+
             </div>
-
         </div>
-    </div>
 
-</div>
+    </div>
 @endsection
