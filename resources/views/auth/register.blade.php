@@ -10,10 +10,12 @@
 
     <!-- Custom fonts for this template-->
     <link href="{{ asset('vendor/fontawesome-free/css/all.min.css') }}" rel="stylesheet" type="text/css">
-    <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
+        rel="stylesheet">
 
     <!-- Custom styles for this template-->
-<link href="{{ asset('sb-admin-2/css/sb-admin-2.min.css') }}" rel="stylesheet">
+    <link href="{{ asset('sb-admin-2/css/sb-admin-2.min.css') }}" rel="stylesheet">
 </head>
 
 <body class="bg-gradient-primary">
@@ -24,11 +26,14 @@
             <div class="card-body p-0">
                 <!-- Nested Row within Card Body -->
                 <div class="row">
-                    <div class="col-lg-5 d-none d-lg-block bg-register-image" style="background: url('{{ asset('img/fish-register.jpg') }}') center center / cover no-repeat; position: relative;">
-                        <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(78, 115, 223, 0.7); display: flex; align-items: center; justify-content: center; flex-direction: column; color: white; padding: 2rem;">
+                    <div class="col-lg-5 d-none d-lg-block bg-register-image"
+                        style="background: url('{{ asset('img/fish-register.jpg') }}') center center / cover no-repeat; position: relative;">
+                        <div
+                            style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(78, 115, 223, 0.7); display: flex; align-items: center; justify-content: center; flex-direction: column; color: white; padding: 2rem;">
                             <i class="fas fa-fish fa-5x mb-4"></i>
                             <h2 class="text-white font-weight-bold">KediriFishHub</h2>
-                            <p class="text-center text-white-50">Bergabunglah dan mulai berbisnis benih ikan berkualitas</p>
+                            <p class="text-center text-white-50">Bergabunglah dan mulai berbisnis benih ikan berkualitas
+                            </p>
                             <div class="mt-4">
                                 <div class="text-white mb-2">
                                     <i class="fas fa-check-circle mr-2"></i> Akses ke ribuan peternak
@@ -53,15 +58,10 @@
 
                                 <!-- Name -->
                                 <div class="form-group">
-                                    <input type="text" 
-                                           class="form-control form-control-user @error('name') is-invalid @enderror" 
-                                           id="name" 
-                                           name="name" 
-                                           value="{{ old('name') }}"
-                                           placeholder="Nama Lengkap"
-                                           required 
-                                           autofocus 
-                                           autocomplete="name">
+                                    <input type="text"
+                                        class="form-control form-control-user @error('name') is-invalid @enderror"
+                                        id="name" name="name" value="{{ old('name') }}"
+                                        placeholder="Nama Lengkap" required autofocus autocomplete="name">
                                     @error('name')
                                         <div class="invalid-feedback">
                                             {{ $message }}
@@ -71,14 +71,10 @@
 
                                 <!-- Email Address -->
                                 <div class="form-group">
-                                    <input type="email" 
-                                           class="form-control form-control-user @error('email') is-invalid @enderror" 
-                                           id="email" 
-                                           name="email" 
-                                           value="{{ old('email') }}"
-                                           placeholder="Alamat Email"
-                                           required 
-                                           autocomplete="username">
+                                    <input type="email"
+                                        class="form-control form-control-user @error('email') is-invalid @enderror"
+                                        id="email" name="email" value="{{ old('email') }}"
+                                        placeholder="Alamat Email" required autocomplete="username">
                                     @error('email')
                                         <div class="invalid-feedback">
                                             {{ $message }}
@@ -89,13 +85,10 @@
                                 <!-- Password -->
                                 <div class="form-group row">
                                     <div class="col-sm-6 mb-3 mb-sm-0">
-                                        <input type="password" 
-                                               class="form-control form-control-user @error('password') is-invalid @enderror" 
-                                               id="password" 
-                                               name="password"
-                                               placeholder="Password"
-                                               required 
-                                               autocomplete="new-password">
+                                        <input type="password"
+                                            class="form-control form-control-user @error('password') is-invalid @enderror"
+                                            id="password" name="password" placeholder="Password" required
+                                            autocomplete="new-password">
                                         @error('password')
                                             <div class="invalid-feedback">
                                                 {{ $message }}
@@ -103,13 +96,10 @@
                                         @enderror
                                     </div>
                                     <div class="col-sm-6">
-                                        <input type="password" 
-                                               class="form-control form-control-user @error('password_confirmation') is-invalid @enderror" 
-                                               id="password_confirmation" 
-                                               name="password_confirmation"
-                                               placeholder="Ulangi Password"
-                                               required 
-                                               autocomplete="new-password">
+                                        <input type="password"
+                                            class="form-control form-control-user @error('password_confirmation') is-invalid @enderror"
+                                            id="password_confirmation" name="password_confirmation"
+                                            placeholder="Ulangi Password" required autocomplete="new-password">
                                         @error('password_confirmation')
                                             <div class="invalid-feedback">
                                                 {{ $message }}
@@ -124,7 +114,9 @@
                                     <div class="row">
                                         <div class="col-sm-6 mb-2">
                                             <div class="custom-control custom-radio">
-                                                <input type="radio" id="role_peternak" name="role" class="custom-control-input" value="peternak" {{ old('role') == 'peternak' ? 'checked' : '' }} required>
+                                                <input type="radio" id="role_peternak" name="role"
+                                                    class="custom-control-input" value="peternak"
+                                                    {{ old('role') == 'peternak' ? 'checked' : '' }} required>
                                                 <label class="custom-control-label" for="role_peternak">
                                                     <i class="fas fa-user-tie text-primary mr-1"></i> Peternak
                                                 </label>
@@ -133,7 +125,9 @@
                                         </div>
                                         <div class="col-sm-6 mb-2">
                                             <div class="custom-control custom-radio">
-                                                <input type="radio" id="role_pembudidaya" name="role" class="custom-control-input" value="pembudidaya" {{ old('role') == 'pembudidaya' ? 'checked' : '' }} required>
+                                                <input type="radio" id="role_pembudidaya" name="role"
+                                                    class="custom-control-input" value="pembudidaya"
+                                                    {{ old('role') == 'pembudidaya' ? 'checked' : '' }} required>
                                                 <label class="custom-control-label" for="role_pembudidaya">
                                                     <i class="fas fa-user text-success mr-1"></i> Pembudidaya
                                                 </label>
@@ -146,12 +140,34 @@
                                     @enderror
                                 </div>
 
+                                {{-- FORM TAMBAHAN UNTUK PETERNak --}}
+                                <div id="formPeternak" style="display: none">
+
+                                    <hr>
+                                    <h6 class="text-primary mb-3">
+                                        <i class="fas fa-store"></i> Data Peternak
+                                    </h6>
+
+                                    <div class="form-group">
+                                        <input type="text" name="no_hp" class="form-control form-control-user"
+                                            placeholder="Nomor HP Aktif">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <textarea name="alamat" class="form-control" placeholder="Alamat Lengkap"></textarea>
+                                    </div>
+
+                                </div>
+
+
                                 <!-- Terms & Conditions -->
                                 <div class="form-group">
                                     <div class="custom-control custom-checkbox small">
-                                        <input type="checkbox" class="custom-control-input" id="terms" name="terms" required>
+                                        <input type="checkbox" class="custom-control-input" id="terms"
+                                            name="terms" required>
                                         <label class="custom-control-label" for="terms">
-                                            Saya setuju dengan <a href="#" class="text-primary">Syarat & Ketentuan</a>
+                                            Saya setuju dengan <a href="#" class="text-primary">Syarat &
+                                                Ketentuan</a>
                                         </label>
                                     </div>
                                     @error('terms')
@@ -166,7 +182,7 @@
 
                                 <hr>
 
-                               
+
                             </form>
 
                             <hr>
@@ -191,6 +207,27 @@
 
     <!-- Custom scripts for all pages-->
     <script src="{{ asset('js/sb-admin-2.min.js') }}"></script>
+
+    <script>
+        function togglePeternak() {
+            const role = document.querySelector('input[name="role"]:checked')?.value;
+            const form = document.getElementById('formPeternak');
+
+            if (role === 'peternak') {
+                form.style.display = 'block';
+            } else {
+                form.style.display = 'none';
+            }
+        }
+
+        document.querySelectorAll('input[name="role"]').forEach(el => {
+            el.addEventListener('change', togglePeternak);
+        });
+
+        // saat reload dengan old value
+        togglePeternak();
+    </script>
+
 
 </body>
 

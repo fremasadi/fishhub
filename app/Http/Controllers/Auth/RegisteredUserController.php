@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
+use App\Models\Peternak;
+use Illuminate\Support\Facades\DB;
 
 class RegisteredUserController extends Controller
 {
@@ -31,20 +33,49 @@ class RegisteredUserController extends Controller
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'email' => ['required', 'email', 'unique:users,email'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'role' => ['required', 'in:peternak,pembudidaya'],
+
+            // WAJIB kalau peternak
+            'no_hp' => ['required_if:role,peternak'],
+            'alamat' => ['required_if:role,peternak'],
         ]);
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
+        DB::beginTransaction();
 
-        event(new Registered($user));
+        try {
+            // 1. CREATE USER
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'role' => $request->role,
+                'password' => Hash::make($request->password),
+            ]);
 
-        Auth::login($user);
+            // 2. JIKA PETERNak → CREATE TABEL PETERNak
+            if ($request->role === 'peternak') {
+                Peternak::create([
+                    'user_id' => $user->id,
+                    'no_hp' => $request->no_hp,
+                    'alamat' => $request->alamat,
+                    'status_aktif' => 1,
+                ]);
+            }
 
-        return redirect(route('dashboard', absolute: false));
+            DB::commit();
+
+            event(new Registered($user));
+
+            Auth::login($user);
+
+            return redirect()->route('login')->with('success', 'Registrasi berhasil! Silakan login.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return back()
+                ->withInput()
+                ->with('error', 'Gagal registrasi: ' . $e->getMessage());
+        }
     }
 }
