@@ -40,6 +40,8 @@ class RegisteredUserController extends Controller
             // WAJIB kalau peternak
             'no_hp' => ['required_if:role,peternak'],
             'alamat' => ['required_if:role,peternak'],
+            'latitude' => ['required_if:role,peternak'],
+            'longitude' => ['required_if:role,peternak'],
         ]);
 
         DB::beginTransaction();
@@ -59,6 +61,8 @@ class RegisteredUserController extends Controller
                     'user_id' => $user->id,
                     'no_hp' => $request->no_hp,
                     'alamat' => $request->alamat,
+                    'latitude' => $request->latitude,
+                    'longitude' => $request->longitude,
                     'status_aktif' => 1,
                 ]);
             }
@@ -67,9 +71,10 @@ class RegisteredUserController extends Controller
 
             event(new Registered($user));
 
-            Auth::login($user);
+            // Auth::login($user);
 
-            return redirect()->route('login')->with('success', 'Registrasi berhasil! Silakan login.');
+            // return redirect()->route('login')->with('success', 'Registrasi berhasil! Silakan login.');
+            return redirect()->back()->with('success', 'Registrasi berhasil! Silakan login menggunakan email dan password Anda.');
         } catch (\Exception $e) {
             DB::rollBack();
 

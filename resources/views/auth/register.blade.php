@@ -153,9 +153,25 @@
                                             placeholder="Nomor HP Aktif">
                                     </div>
 
+
+
                                     <div class="form-group">
                                         <textarea name="alamat" class="form-control" placeholder="Alamat Lengkap"></textarea>
                                     </div>
+                                     <!-- SEARCH MAP -->
+                                     <div class="form-group">
+                                        <input type="text" id="map_search" class="form-control"
+                                            placeholder="Cari lokasi peternakan">
+                                    </div>
+
+                                    <!-- MAP -->
+                                    <div id="map" style="height:300px;border-radius:10px;"></div>
+
+                                    <!-- HIDDEN LAT LONG -->
+                                    <input type="hidden" id="latitude" name="latitude"
+                                        value="{{ old('latitude') }}">
+                                    <input type="hidden" id="longitude" name="longitude"
+                                        value="{{ old('longitude') }}">
 
                                 </div>
 
@@ -208,6 +224,8 @@
     <!-- Custom scripts for all pages-->
     <script src="{{ asset('js/sb-admin-2.min.js') }}"></script>
 
+
+
     <script>
         function togglePeternak() {
             const role = document.querySelector('input[name="role"]:checked')?.value;
@@ -215,6 +233,14 @@
 
             if (role === 'peternak') {
                 form.style.display = 'block';
+
+                // refresh map setelah form tampil
+                setTimeout(() => {
+                    if (window.google && window.map) {
+                        google.maps.event.trigger(map, 'resize');
+                    }
+                }, 300);
+
             } else {
                 form.style.display = 'none';
             }
@@ -224,9 +250,78 @@
             el.addEventListener('change', togglePeternak);
         });
 
-        // saat reload dengan old value
+        // saat reload (old value / validation error)
         togglePeternak();
     </script>
+
+    <script>
+        let map, marker, autocomplete, geocoder;
+
+        function initMap() {
+            const defaultLocation = {
+                lat: -6.2088,
+                lng: 106.8456
+            };
+
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: defaultLocation,
+                zoom: 13,
+            });
+
+            geocoder = new google.maps.Geocoder();
+
+            marker = new google.maps.Marker({
+                position: defaultLocation,
+                map: map,
+                draggable: true
+            });
+
+            // search
+            autocomplete = new google.maps.places.Autocomplete(
+                document.getElementById('map_search'), {
+                    componentRestrictions: {
+                        country: 'id'
+                    }
+                }
+            );
+
+            autocomplete.addListener('place_changed', () => {
+                const place = autocomplete.getPlace();
+                if (!place.geometry) return;
+
+                map.setCenter(place.geometry.location);
+                marker.setPosition(place.geometry.location);
+
+                updateLatLng(
+                    place.geometry.location.lat(),
+                    place.geometry.location.lng(),
+                    place.formatted_address
+                );
+            });
+
+            map.addListener('click', (e) => {
+                marker.setPosition(e.latLng);
+                updateLatLng(e.latLng.lat(), e.latLng.lng());
+            });
+
+            marker.addListener('dragend', (e) => {
+                updateLatLng(e.latLng.lat(), e.latLng.lng());
+            });
+        }
+
+        function updateLatLng(lat, lng, address = null) {
+            document.getElementById('latitude').value = lat;
+            document.getElementById('longitude').value = lng;
+
+            if (address) {
+                document.querySelector('textarea[name="alamat"]').value = address;
+            }
+        }
+    </script>
+
+    <script
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD8l6eRve8pNpEzOfgosulUBmxD5qFZ370&libraries=places&callback=initMap"
+        async defer></script>
 
 
 </body>
