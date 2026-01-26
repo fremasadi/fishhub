@@ -85,11 +85,11 @@
         </div>
 
         <!-- Nav Item - Stok Benih -->
-        {{-- <li class="nav-item {{ request()->routeIs('benih.*') ? 'active' : '' }}">
+        <li class="nav-item {{ request()->routeIs('benih.*') ? 'active' : '' }}">
             <a class="nav-link" href="{{ route('benih.index') }}">
                 <i class="fas fa-fw fa-fish"></i>
                 <span>Stok</span>
-            </a>s
+            </a>
         </li>
 
         <!-- Nav Item - Pesanan -->
@@ -113,7 +113,7 @@
                 <i class="fas fa-fw fa-credit-card"></i>
                 <span>Riwayat Pembayaran</span>
             </a>
-        </li> --}}
+        </li>
     @endif
 
     <!-- Divider -->
