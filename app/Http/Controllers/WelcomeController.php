@@ -8,18 +8,21 @@ use Illuminate\Http\Request;
 
 class WelcomeController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // Ambil stok benih yang sudah divalidasi dan tersedia
-        $stokBenihs = StokBenih::with(['peternak.user'])
-            ->where('status_validasi', 'Terverifikasi')
-            ->where('status_stok', 'Tersedia')
+        $query = StokBenih::with(['peternak.user'])
+            ->where('status_stok', 'Tersedia');
+
+        // FILTER JENIS IKAN
+        if ($request->jenis) {
+            $query->where('jenis', $request->jenis);
+        }
+
+        $stokBenihs = $query
             ->orderBy('tanggal_input', 'desc')
             ->get();
 
-        // Ambil data peternak yang aktif beserta koordinatnya
         $peternaks = Peternak::with('user')
-            ->where('status_aktif', true)
             ->whereNotNull('latitude')
             ->whereNotNull('longitude')
             ->get();

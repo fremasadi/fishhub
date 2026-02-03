@@ -11,8 +11,6 @@ class RoleMiddleware
     public function handle(Request $request, Closure $next, string $role): Response
     {
 
-            \Log::info("RoleMiddleware jalan: user role = " . auth()->user()->role);
-
         if (auth()->check() && auth()->user()->role === $role) {
             return $next($request);
         }

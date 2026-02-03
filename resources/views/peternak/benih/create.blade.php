@@ -29,8 +29,17 @@
                         <!-- Jenis -->
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Jenis Benih</label>
-                            <input type="text" name="jenis" class="form-control"
-                                placeholder="Contoh: Lele, Nila, Gurame" required>
+                            <select name="jenis" class="form-control" required>
+                                <option value="">-- Pilih Jenis Benih --</option>
+                                <option value="Ikan Lele">Ikan Lele</option>
+                                <option value="Ikan Nila">Ikan Nila</option>
+                                <option value="Ikan Mujair">Ikan Mujair</option>
+                                <option value="Ikan Gurame">Ikan Gurame</option>
+                                <option value="Ikan Patin">Ikan Patin</option>
+                                <option value="Ikan Mas">Ikan Mas</option>
+                                <option value="Ikan Bawal Air Tawar">Bawal Air Tawar</option>
+                                <option value="Ikan Lainnya">Lainnya</option>
+                            </select>
                         </div>
 
                         <!-- Jumlah -->

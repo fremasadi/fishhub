@@ -53,6 +53,24 @@
                                 <h1 class="h4 text-gray-900 mb-4">Buat Akun Baru!</h1>
                             </div>
 
+                            @if (session('success'))
+                                <div class="alert alert-success alert-dismissible fade show">
+                                    {{ session('success') }}
+                                    <button type="button" class="close" data-dismiss="alert">
+                                        <span>&times;</span>
+                                    </button>
+                                </div>
+                            @endif
+
+                            @if (session('error'))
+                                <div class="alert alert-danger alert-dismissible fade show">
+                                    {{ session('error') }}
+                                    <button type="button" class="close" data-dismiss="alert">
+                                        <span>&times;</span>
+                                    </button>
+                                </div>
+                            @endif
+
                             <form method="POST" action="{{ route('register') }}" class="user">
                                 @csrf
 
@@ -158,8 +176,8 @@
                                     <div class="form-group">
                                         <textarea name="alamat" class="form-control" placeholder="Alamat Lengkap"></textarea>
                                     </div>
-                                     <!-- SEARCH MAP -->
-                                     <div class="form-group">
+                                    <!-- SEARCH MAP -->
+                                    <div class="form-group">
                                         <input type="text" id="map_search" class="form-control"
                                             placeholder="Cari lokasi peternakan">
                                     </div>

@@ -3,7 +3,7 @@
 @section('content')
     <div class="container-fluid">
 
-        <h1 class="h3 mb-4">Daftar Stok Peternak</h1>
+        <h1 class="h3 mb-4">Daftar Data Benih Peternak</h1>
 
         <div class="card shadow">
             <div class="card-body">
@@ -35,7 +35,7 @@
                                     <td>{{ ucfirst($item->kualitas) }}</td>
                                     <td>{{ number_format($item->jumlah) }}</td>
                                     <td>Rp {{ number_format($item->harga, 0, ',', '.') }}</td>
-                                    <td>{{ $item->status_stok === 'tersedia' ? 'Tersedia' : 'Habis' }}</td>
+                                    <td>{{ $item->status_stok === 'Tersedia' ? 'Tersedia' : 'Habis' }}</td>
                                     <td>{{ \Carbon\Carbon::parse($item->tanggal_input)->format('d M Y') }}</td>
 
                                     <td>

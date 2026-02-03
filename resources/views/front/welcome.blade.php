@@ -176,6 +176,35 @@
 
     <!-- Stok Benih Section -->
     <section id="stok-benih" class="container mb-5">
+        <div class="row justify-content-center mb-4">
+            <div class="col-md-6">
+                <form method="GET" action="{{ route('welcome') }}">
+                    <div class="input-group">
+                        <select name="jenis" class="form-control">
+                            <option value="">Semua Jenis Ikan</option>
+                            <option value="Ikan Lele" {{ request('jenis') == 'Ikan Lele' ? 'selected' : '' }}>Ikan Lele</option>
+                            <option value="Ikan Nila" {{ request('jenis') == 'Ikan Nila' ? 'selected' : '' }}>Ikan Nila</option>
+                            <option value="Ikan Mujair" {{ request('jenis') == 'Ikan Mujair' ? 'selected' : '' }}>Ikan Mujair</option>
+                            <option value="Ikan Gurame" {{ request('jenis') == 'Ikan Gurame' ? 'selected' : '' }}>Ikan Gurame</option>
+                            <option value="Ikan Patin" {{ request('jenis') == 'Ikan Patin' ? 'selected' : '' }}>Ikan Patin</option>
+                            <option value="Ikan Mas" {{ request('jenis') == 'Ikan Mas' ? 'selected' : '' }}>Ikan Mas</option>
+                            <option value="Ikan Bawal Air Tawar"
+                                {{ request('jenis') == 'Ikan Bawal Air Tawar' ? 'selected' : '' }}>
+                                Ikan Bawal Air Tawar
+                            </option>
+                        </select>
+
+                        <button class="btn btn-primary">
+                            <i class="fas fa-search"></i>
+                        </button>
+
+                        <a href="{{ route('welcome') }}" class="btn btn-secondary">
+                            Reset
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
         <div class="text-center mb-5">
             <h2 class="fw-bold" style="color: var(--primary-blue);">
                 <i class="fas fa-box"></i> Stok Benih Tersedia

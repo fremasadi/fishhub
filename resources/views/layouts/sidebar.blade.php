@@ -61,7 +61,6 @@
             </a>
         </li>
 
-        {{-- <!-- Nav Item - Pesanan -->
         <li class="nav-item {{ request()->routeIs('admin.pesanan.*') ? 'active' : '' }}">
             <a class="nav-link" href="{{ route('admin.pesanan.index') }}">
                 <i class="fas fa-fw fa-shopping-cart"></i>
@@ -69,13 +68,12 @@
             </a>
         </li>
 
-        <!-- Nav Item - Pembayaran -->
         <li class="nav-item {{ request()->routeIs('admin.pembayaran.*') ? 'active' : '' }}">
             <a class="nav-link" href="{{ route('admin.pembayaran.index') }}">
                 <i class="fas fa-fw fa-money-bill-wave"></i>
                 <span>Pembayaran</span>
             </a>
-        </li> --}}
+        </li>
     @endif
 
     @if (Auth::check() && Auth::user()->role === 'peternak')
