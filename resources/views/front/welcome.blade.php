@@ -110,7 +110,7 @@
                 <div class="col-lg-7">
                     <h1 class="hero-title">Pesan Benih Ikan Berkualitas untuk Budidaya Anda</h1>
                     <p class="hero-subtitle">
-                        Aplikasi resmi dari <strong>Dinas Perikanan Kabupaten Kediri</strong> yang menghadirkan kemudahan
+                        Aplikasi resmi dari <strong>Perikanan Kabupaten Kediri</strong> yang menghadirkan kemudahan
                         bagi masyarakat
                         dalam mendapatkan benih ikan unggul secara langsung dari peternak lokal yang terverifikasi.
                     </p>
