@@ -32,7 +32,7 @@
                                 <th>Kualitas</th>
                                 <th>Harga</th>
                                 <th>Status</th>
-                                <th>Validasi</th>
+                                {{-- <th>Validasi</th> --}}
                                 <th>Aksi</th>
                             </tr>
                         </thead>
@@ -69,12 +69,12 @@
                                     </td>
 
                                     <!-- Validasi -->
-                                    <td>
+                                    {{-- <td>
                                         <span
                                             class="badge bg-{{ $item->status_validasi == 'Terverifikasi' ? 'info' : 'warning' }}">
                                             {{ $item->status_validasi }}
                                         </span>
-                                    </td>
+                                    </td> --}}
 
                                     <td>
                                         <div class="btn-group">
