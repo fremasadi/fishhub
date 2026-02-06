@@ -276,30 +276,44 @@
         let map, marker, autocomplete, geocoder;
 
         function initMap() {
-            const defaultLocation = {
-                lat: -6.2088,
-                lng: 106.8456
+            // Default Kediri
+            const kediriLocation = {
+                lat: -7.8166,
+                lng: 112.0115
             };
 
             map = new google.maps.Map(document.getElementById('map'), {
-                center: defaultLocation,
+                center: kediriLocation,
                 zoom: 13,
             });
 
             geocoder = new google.maps.Geocoder();
 
             marker = new google.maps.Marker({
-                position: defaultLocation,
+                position: kediriLocation,
                 map: map,
                 draggable: true
             });
 
-            // search
+            // batas area Kediri
+            const kediriBounds = new google.maps.LatLngBounds({
+                    lat: -8.20,
+                    lng: 111.80
+                }, // SW
+                {
+                    lat: -7.50,
+                    lng: 112.40
+                } // NE
+            );
+
+            // autocomplete search
             autocomplete = new google.maps.places.Autocomplete(
                 document.getElementById('map_search'), {
                     componentRestrictions: {
                         country: 'id'
-                    }
+                    },
+                    bounds: kediriBounds,
+                    strictBounds: false // masih boleh luar Kediri tapi tidak diutamakan
                 }
             );
 
@@ -317,14 +331,19 @@
                 );
             });
 
+            // klik map
             map.addListener('click', (e) => {
                 marker.setPosition(e.latLng);
                 updateLatLng(e.latLng.lat(), e.latLng.lng());
             });
 
+            // drag marker
             marker.addListener('dragend', (e) => {
                 updateLatLng(e.latLng.lat(), e.latLng.lng());
             });
+
+            // isi default lat lng awal
+            updateLatLng(kediriLocation.lat, kediriLocation.lng);
         }
 
         function updateLatLng(lat, lng, address = null) {

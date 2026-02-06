@@ -116,8 +116,10 @@
     let map, marker, geocoder, autocomplete;
 
     function initMap() {
-        const defaultLat = parseFloat(document.getElementById('latitude').value) || -6.2088;
-        const defaultLng = parseFloat(document.getElementById('longitude').value) || 106.8456;
+
+        // Default Kediri jika belum ada data
+        const defaultLat = parseFloat(document.getElementById('latitude').value) || -7.8166;
+        const defaultLng = parseFloat(document.getElementById('longitude').value) || 112.0115;
 
         const defaultLocation = { lat: defaultLat, lng: defaultLng };
 
@@ -134,18 +136,29 @@
             draggable: true,
         });
 
+        // Drag marker
         marker.addListener('dragend', function (e) {
             updateLocation(e.latLng.lat(), e.latLng.lng());
         });
 
+        // Klik map
         map.addListener('click', function (e) {
             marker.setPosition(e.latLng);
             updateLocation(e.latLng.lat(), e.latLng.lng());
         });
 
+        // Batas area Kediri
+        const kediriBounds = new google.maps.LatLngBounds(
+            { lat: -8.20, lng: 111.80 }, // SW
+            { lat: -7.50, lng: 112.40 }  // NE
+        );
+
+        // Autocomplete search
         const input = document.getElementById('map_search');
         autocomplete = new google.maps.places.Autocomplete(input, {
-            componentRestrictions: { country: 'id' }
+            componentRestrictions: { country: 'id' },
+            bounds: kediriBounds,
+            strictBounds: false // masih boleh luar Kediri
         });
 
         autocomplete.addListener('place_changed', function () {
@@ -162,6 +175,9 @@
                 place.formatted_address
             );
         });
+
+        // isi awal
+        updateLocation(defaultLat, defaultLng);
     }
 
     function updateLocation(lat, lng, address = null) {
@@ -173,7 +189,8 @@
         } else {
             geocoder.geocode({ location: { lat, lng } }, function (results, status) {
                 if (status === 'OK' && results[0]) {
-                    document.getElementById('alamat').value = results[0].formatted_address;
+                    document.getElementById('alamat').value =
+                        results[0].formatted_address;
                 }
             });
         }

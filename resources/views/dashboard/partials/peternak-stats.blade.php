@@ -224,7 +224,7 @@
                 </div>
                 <div class="mb-2">
                     <i class="fas fa-check-circle text-success mr-2"></i>
-                    <span>Status: 
+                    <span>Status:
                         @if($data['peternak']->status_aktif)
                             <span class="badge badge-success">Aktif</span>
                         @else
@@ -308,7 +308,7 @@
             <div class="card-body" style="max-height: 400px; overflow-y: auto;">
                 @forelse($data['benihStok'] as $benih)
                     <div class="mb-3 p-2 border-left border-primary" style="border-left-width: 3px !important;">
-                        <div class="d-flex justify-content-between align-items-center mb-1">
+                        {{-- <div class="d-flex justify-content-between align-items-center mb-1">
                             <h6 class="mb-0">{{ $benih->jenis }}</h6>
                             @if($benih->status_validasi === 'approved')
                                 <span class="badge badge-success">Disetujui</span>
@@ -317,7 +317,7 @@
                             @else
                                 <span class="badge badge-danger">Ditolak</span>
                             @endif
-                        </div>
+                        </div> --}}
                         <div class="d-flex justify-content-between align-items-center">
                             <small class="text-muted">{{ $benih->ukuran }} | {{ $benih->kualitas }}</small>
                             <span class="badge badge-primary">{{ number_format($benih->jumlah) }} ekor</span>

@@ -351,63 +351,82 @@
             };
 
             map = new google.maps.Map(document.getElementById("map"), {
-                zoom: 9,
+                zoom: 10,
                 center: centerKediri,
                 mapTypeControl: false,
                 streetViewControl: false,
                 fullscreenControl: true,
             });
 
+            // BATAS AREA KEDIRI
+            const kediriBoundsArea = {
+                minLat: -8.20,
+                maxLat: -7.50,
+                minLng: 111.80,
+                maxLng: 112.40
+            };
+
             const peternakData = @json($peternaks);
             const bounds = new google.maps.LatLngBounds();
 
             peternakData.forEach(peternak => {
-                if (peternak.latitude && peternak.longitude) {
-                    const position = {
-                        lat: parseFloat(peternak.latitude),
-                        lng: parseFloat(peternak.longitude),
-                    };
+                if (!peternak.latitude || !peternak.longitude) return;
 
-                    const marker = new google.maps.Marker({
-                        position: position,
-                        map: map,
-                        title: peternak.user.name,
-                        icon: {
-                            url: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png",
-                        },
-                    });
+                const lat = parseFloat(peternak.latitude);
+                const lng = parseFloat(peternak.longitude);
 
-                    const infoWindow = new google.maps.InfoWindow({
-                        content: `
-                        <div style="min-width:200px">
-                            <h6 class="fw-bold mb-1">${peternak.user.name}</h6>
-                            <p class="mb-1 small text-muted">
-                                <i class="fas fa-map-marker-alt"></i> ${peternak.alamat ?? '-'}
-                            </p>
-                            <p class="mb-1 small text-muted">
-                                <i class="fas fa-phone"></i> ${peternak.no_hp ?? '-'}
-                            </p>
-                            <span class="badge ${peternak.status_aktif ? 'bg-success' : 'bg-secondary'}">
-                                ${peternak.status_aktif ? 'Aktif' : 'Tidak Aktif'}
-                            </span>
-                        </div>
-                    `
-                    });
-
-                    marker.addListener("click", () => {
-                        infoWindow.open(map, marker);
-                    });
-
-                    bounds.extend(position);
+                // FILTER AREA KEDIRI
+                if (
+                    lat < kediriBoundsArea.minLat ||
+                    lat > kediriBoundsArea.maxLat ||
+                    lng < kediriBoundsArea.minLng ||
+                    lng > kediriBoundsArea.maxLng
+                ) {
+                    return; // di luar Kediri -> abaikan
                 }
+
+                const position = { lat, lng };
+
+                const marker = new google.maps.Marker({
+                    position: position,
+                    map: map,
+                    title: peternak.user.name,
+                    icon: {
+                        url: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png",
+                    },
+                });
+
+                const infoWindow = new google.maps.InfoWindow({
+                    content: `
+                    <div style="min-width:200px">
+                        <h6 class="fw-bold mb-1">${peternak.user.name}</h6>
+                        <p class="mb-1 small text-muted">
+                            <i class="fas fa-map-marker-alt"></i> ${peternak.alamat ?? '-'}
+                        </p>
+                        <p class="mb-1 small text-muted">
+                            <i class="fas fa-phone"></i> ${peternak.no_hp ?? '-'}
+                        </p>
+                        <span class="badge ${peternak.status_aktif ? 'bg-success' : 'bg-secondary'}">
+                            ${peternak.status_aktif ? 'Aktif' : 'Tidak Aktif'}
+                        </span>
+                    </div>
+                    `
+                });
+
+                marker.addListener("click", () => {
+                    infoWindow.open(map, marker);
+                });
+
+                bounds.extend(position);
             });
 
             if (!bounds.isEmpty()) {
                 map.fitBounds(bounds);
+            } else {
+                map.setCenter(centerKediri);
             }
         }
 
-        // auto dismiss alert
         setTimeout(() => {
             document.querySelectorAll('.alert').forEach(alert => {
                 new bootstrap.Alert(alert).close();

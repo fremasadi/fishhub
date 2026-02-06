@@ -1,7 +1,7 @@
 <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
     <div class="container">
         <a class="navbar-brand" href="{{ url('/') }}">
-            <i class="fas fa-fish"></i> Benih Ikan
+            <i class="fas fa-fish"></i> Kediri Fishhub
         </a>
 
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
