@@ -86,7 +86,7 @@
         <li class="nav-item {{ request()->routeIs('benih.*') ? 'active' : '' }}">
             <a class="nav-link" href="{{ route('benih.index') }}">
                 <i class="fas fa-fw fa-fish"></i>
-                <span>Stok</span>
+                <span>Data Stok</span>
             </a>
         </li>
 
