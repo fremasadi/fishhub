@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Peternak;
+use App\Models\Pembudidaya;
 use App\Models\StokBenih;
 class DatabaseSeeder extends Seeder
 {
@@ -73,7 +74,25 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
-        echo "Seeder selesai: 10 peternak + 10 stok benih dibuat\n";
+        // =====================================================
+        // PEMBUDIDAYA
+        // =====================================================
+        for ($j = 1; $j <= 5; $j++) {
+            $userBudidaya = User::create([
+                'name' => "Pembudidaya $j",
+                'email' => "pembudidaya$j@example.com",
+                'password' => Hash::make('password'),
+                'role' => 'pembudidaya',
+            ]);
+
+            Pembudidaya::create([
+                'user_id' => $userBudidaya->id,
+                'no_hp'   => "08567" . rand(1000000, 9999999),
+                'alamat'  => "Alamat Pembudidaya $j, Kediri",
+            ]);
+        }
+
+        echo "Seeder selesai: 10 peternak + 10 stok benih + 5 pembudidaya dibuat\n";
 
     }
 }

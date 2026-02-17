@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\PeternakController;
+use App\Http\Controllers\Admin\PembudidayaController;
 use App\Http\Controllers\Peternak\StokBenihController;
 use App\Http\Controllers\WelcomeController;
 use App\Http\Controllers\DashboardController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\Admin\PesananController as AdminPesananController;
 use App\Http\Controllers\Peternak\PesananController as PeternakPesananController;
 use App\Http\Controllers\Peternak\PengambilanController;
 use App\Http\Controllers\Peternak\ProfileController;
+use App\Http\Controllers\Pembudidaya\ProfileController as PembudidayaProfileController;
 
 Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
 
@@ -20,6 +22,7 @@ Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
 Route::middleware(['role:admin'])->group(function () {
     Route::resource('users', UserController::class);
     Route::resource('peternaks', PeternakController::class);
+    Route::resource('pembudidayas', PembudidayaController::class);
 
     Route::get('admin/benih', [AdminStokBenihController::class, 'index'])->name('admin.benih.index');
     Route::resource('admin/pesanan', AdminPesananController::class)->names('admin.pesanan');
@@ -41,6 +44,12 @@ Route::middleware(['role:peternak'])->group(function () {
 
     Route::get('peternak/profile', [ProfileController::class, 'edit'])->name('peternak.profile.edit');
     Route::put('peternak/profile', [ProfileController::class, 'update'])->name('peternak.profile.update');
+});
+
+Route::middleware(['role:pembudidaya'])->group(function () {
+    Route::get('pembudidaya/profile', [PembudidayaProfileController::class, 'edit'])->name('pembudidaya.profile.edit');
+    Route::put('pembudidaya/profile', [PembudidayaProfileController::class, 'update'])->name('pembudidaya.profile.update');
+    Route::put('pembudidaya/profile/password', [PembudidayaProfileController::class, 'updatePassword'])->name('pembudidaya.profile.password');
 });
 
 // Route::get('/dashboard', function () {

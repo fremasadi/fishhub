@@ -35,7 +35,7 @@
 
                         {{-- ================= MOBILE VERSION ================= --}}
                         {{-- Keranjang mobile --}}
-                        @if(auth()->user()->role === 'pembudidaya')
+                        @if (auth()->user()->role === 'pembudidaya')
                             <li class="nav-item d-lg-none">
                                 <a class="nav-link" href="{{ route('cart.index') }}">
                                     <i class="fas fa-shopping-cart"></i> Keranjang
@@ -43,7 +43,7 @@
                                         $cart = Session::get('cart', []);
                                         $cartCount = count($cart);
                                     @endphp
-                                    @if($cartCount > 0)
+                                    @if ($cartCount > 0)
                                         <span class="badge bg-danger">{{ $cartCount }}</span>
                                     @endif
                                 </a>
@@ -56,6 +56,15 @@
                                 <i class="fas fa-history"></i> History
                             </a>
                         </li>
+
+                        {{-- Edit Profile mobile --}}
+                        @if (auth()->user()->role === 'pembudidaya')
+                            <li class="nav-item d-lg-none">
+                                <a class="nav-link" href="{{ route('pembudidaya.profile.edit') }}">
+                                    <i class="fas fa-user-edit"></i> Edit Profile
+                                </a>
+                            </li>
+                        @endif
 
                         {{-- Logout mobile --}}
                         <li class="nav-item d-lg-none">
@@ -72,7 +81,7 @@
                             <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown"
                                 role="button" data-bs-toggle="dropdown" aria-expanded="false">
 
-                                @if(auth()->user()->profile_photo)
+                                @if (auth()->user()->profile_photo)
                                     <img src="{{ asset('storage/' . auth()->user()->profile_photo) }}"
                                         class="rounded-circle" width="36" height="36" style="object-fit: cover;">
                                 @else
@@ -86,11 +95,11 @@
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
 
                                 {{-- Keranjang desktop --}}
-                                @if(auth()->user()->role === 'pembudidaya')
+                                @if (auth()->user()->role === 'pembudidaya')
                                     <li>
                                         <a class="dropdown-item" href="{{ route('cart.index') }}">
                                             <i class="fas fa-shopping-cart me-2"></i> Keranjang
-                                            @if($cartCount > 0)
+                                            @if ($cartCount > 0)
                                                 <span class="badge bg-danger">{{ $cartCount }}</span>
                                             @endif
                                         </a>
@@ -104,7 +113,18 @@
                                     </a>
                                 </li>
 
-                                <li><hr class="dropdown-divider"></li>
+                                {{-- Edit Profile desktop --}}
+                                @if (auth()->user()->role === 'pembudidaya')
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('pembudidaya.profile.edit') }}">
+                                            <i class="fas fa-user-edit me-2"></i> Edit Profile
+                                        </a>
+                                    </li>
+                                @endif
+
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
 
                                 {{-- Logout --}}
                                 <li>
@@ -117,7 +137,6 @@
                                 </li>
                             </ul>
                         </li>
-
                     @else
                         {{-- Belum login --}}
                         <li class="nav-item">
@@ -142,26 +161,34 @@
 </nav>
 
 <style>
-.cart-badge {
-    font-size: 0.65rem;
-    padding: 0.25em 0.5em;
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0% { transform: translate(-50%, -50%) scale(1); }
-    50% { transform: translate(-50%, -50%) scale(1.1); }
-    100% { transform: translate(-50%, -50%) scale(1); }
-}
-
-.nav-link:hover .fa-shopping-cart {
-    transform: scale(1.1);
-    transition: transform 0.2s ease;
-}
-
-@media (max-width: 991px) {
     .cart-badge {
-        font-size: 0.6rem;
+        font-size: 0.65rem;
+        padding: 0.25em 0.5em;
+        animation: pulse 2s infinite;
     }
-}
+
+    @keyframes pulse {
+        0% {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        50% {
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+
+        100% {
+            transform: translate(-50%, -50%) scale(1);
+        }
+    }
+
+    .nav-link:hover .fa-shopping-cart {
+        transform: scale(1.1);
+        transition: transform 0.2s ease;
+    }
+
+    @media (max-width: 991px) {
+        .cart-badge {
+            font-size: 0.6rem;
+        }
+    }
 </style>

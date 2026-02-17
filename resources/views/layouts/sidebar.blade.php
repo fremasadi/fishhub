@@ -45,6 +45,14 @@
             </a>
         </li>
 
+        <!-- Nav Item - Pembudidaya -->
+        <li class="nav-item {{ request()->routeIs('pembudidayas.*') ? 'active' : '' }}">
+            <a class="nav-link" href="{{ route('pembudidayas.index') }}">
+                <i class="fas fa-fw fa-user"></i>
+                <span>Data Pembudidaya</span>
+            </a>
+        </li>
+
         <!-- Divider -->
         <hr class="sidebar-divider">
 

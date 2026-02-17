@@ -51,6 +51,11 @@ class User extends Authenticatable
 {
     return $this->hasOne(Peternak::class);
 }
+public function pembudidaya()
+{
+    return $this->hasOne(Pembudidaya::class);
+}
+
 public function pengambilans()
 {
     return $this->hasMany(Pengambilan::class, 'pembudidaya_id');
