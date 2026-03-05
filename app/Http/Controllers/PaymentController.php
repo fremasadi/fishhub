@@ -33,6 +33,14 @@ class PaymentController extends Controller
             return redirect()->route('cart.index')->with('error', 'Keranjang kosong!');
         }
 
+        $jenisPengiriman = $request->input('jenis_pengiriman', 'ambil_sendiri');
+        $alamatPengiriman = $request->input('alamat_pengiriman');
+        $ongkir = $jenisPengiriman === 'diantar' ? 10000 : 0;
+
+        if ($jenisPengiriman === 'diantar' && empty($alamatPengiriman)) {
+            return back()->with('error', 'Alamat pengiriman wajib diisi jika memilih diantar.');
+        }
+
         DB::beginTransaction();
         try {
             // Get peternak_id dan stok_id dari cart
@@ -45,7 +53,8 @@ class PaymentController extends Controller
             $stokId = is_numeric($firstKey) ? $firstKey : $firstItem['stok_id'] ?? ($firstItem['stok_benih_id'] ?? null);
 
             // Calculate total
-            $totalHarga = array_sum(array_column($cart, 'subtotal'));
+            $subtotalBenih = array_sum(array_column($cart, 'subtotal'));
+            $totalHarga = $subtotalBenih + $ongkir;
 
             // Create Pesanan
             $pesanan = Pesanan::create([
@@ -55,6 +64,9 @@ class PaymentController extends Controller
                 'tanggal_pesan' => now(),
                 'total_harga' => $totalHarga,
                 'status_pesanan' => 'Menunggu',
+                'jenis_pengiriman' => $jenisPengiriman,
+                'alamat_pengiriman' => $jenisPengiriman === 'diantar' ? $alamatPengiriman : null,
+                'ongkir' => $ongkir,
             ]);
 
             // Create Detail Pesanan untuk setiap item
@@ -94,6 +106,16 @@ class PaymentController extends Controller
                     'price' => (int) $item['harga'],
                     'quantity' => (int) $item['jumlah'],
                     'name' => 'Benih ' . $item['jenis'] . ' (' . $item['ukuran'] . ') - ' . $item['kualitas'],
+                ];
+            }
+
+            // Tambah item ongkir jika diantar
+            if ($ongkir > 0) {
+                $itemDetails[] = [
+                    'id' => 'ONGKIR',
+                    'price' => $ongkir,
+                    'quantity' => 1,
+                    'name' => 'Ongkos Kirim',
                 ];
             }
 
@@ -281,31 +303,33 @@ class PaymentController extends Controller
      */
     private function updatePaymentStatus($pembayaran, $data)
     {
-        $transactionStatus = $data->transaction_status ?? ($data['transaction_status'] ?? 'pending');
-        $fraudStatus = $data->fraud_status ?? ($data['fraud_status'] ?? null);
-        $paymentType = $data->payment_type ?? ($data['payment_type'] ?? null);
+        // Normalize ke array agar konsisten
+        if (is_object($data)) {
+            $data = json_decode(json_encode($data), true);
+        }
+
+        $transactionStatus = $data['transaction_status'] ?? 'pending';
+        $fraudStatus = $data['fraud_status'] ?? null;
+        $paymentType = $data['payment_type'] ?? null;
 
         $updateData = [
-            'transaction_id' => $data->transaction_id ?? ($data['transaction_id'] ?? null),
+            'transaction_id' => $data['transaction_id'] ?? null,
             'transaction_status' => $transactionStatus,
             'fraud_status' => $fraudStatus,
             'payment_type' => $paymentType,
-            'midtrans_response' => is_array($data) ? $data : json_decode(json_encode($data), true),
+            'midtrans_response' => $data,
         ];
 
         // Bank info for VA
-        if (isset($data->va_numbers) || isset($data['va_numbers'])) {
-            $vaNumbers = $data->va_numbers ?? $data['va_numbers'];
-            if (!empty($vaNumbers)) {
-                $vaNumber = is_array($vaNumbers) ? $vaNumbers[0] : $vaNumbers[0];
-                $updateData['bank'] = $vaNumber->bank ?? ($vaNumber['bank'] ?? null);
-                $updateData['va_number'] = $vaNumber->va_number ?? ($vaNumber['va_number'] ?? null);
-            }
+        if (!empty($data['va_numbers'])) {
+            $vaNumber = $data['va_numbers'][0];
+            $updateData['bank'] = $vaNumber['bank'] ?? null;
+            $updateData['va_number'] = $vaNumber['va_number'] ?? null;
         }
 
         // Transaction time
-        if (isset($data->transaction_time) || isset($data['transaction_time'])) {
-            $updateData['transaction_time'] = $data->transaction_time ?? $data['transaction_time'];
+        if (!empty($data['transaction_time'])) {
+            $updateData['transaction_time'] = $data['transaction_time'];
         }
 
         // Settlement time & Update Pesanan Status

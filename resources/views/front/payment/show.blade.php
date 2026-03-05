@@ -114,6 +114,30 @@
                             @endif
 
 
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Pengiriman</span>
+                                <strong>
+                                    @if($pesanan->jenis_pengiriman === 'diantar')
+                                        <i class="fas fa-truck text-primary me-1"></i> Diantar
+                                    @else
+                                        <i class="fas fa-store text-secondary me-1"></i> Ambil Sendiri
+                                    @endif
+                                </strong>
+                            </li>
+
+                            @if($pesanan->jenis_pengiriman === 'diantar')
+                            <li class="list-group-item">
+                                <div class="d-flex justify-content-between">
+                                    <span>Alamat Pengiriman</span>
+                                    <span class="text-end" style="max-width:60%">{{ $pesanan->alamat_pengiriman }}</span>
+                                </div>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Ongkos Kirim</span>
+                                <strong class="text-warning">Rp {{ number_format($pesanan->ongkir, 0, ',', '.') }}</strong>
+                            </li>
+                            @endif
+
                             @if($pembayaran->settlement_time)
                             <li class="list-group-item d-flex justify-content-between">
                                 <span>Tanggal Pembayaran</span>

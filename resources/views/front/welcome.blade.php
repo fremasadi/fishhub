@@ -76,6 +76,12 @@
 
 @section('content')
 
+@php
+    $cartSession = session('cart', []);
+    $cartPeternakId = !empty($cartSession) ? reset($cartSession)['peternak_id'] : null;
+    $cartPeternakName = !empty($cartSession) ? reset($cartSession)['peternak_name'] : null;
+@endphp
+
     @if (session('success'))
         <div class="container mt-3">
             <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -266,13 +272,15 @@
                             @auth
                                 @if (auth()->user()->role === 'pembudidaya')
                                     @if ($stok->status_stok === 'Tersedia' && $stok->jumlah >= 100)
-                                        <form action="{{ route('cart.add') }}" method="POST">
+                                        <form action="{{ route('cart.add') }}" method="POST" class="add-to-cart-form">
                                             @csrf
                                             <input type="hidden" name="stok_benih_id" value="{{ $stok->id }}">
                                             <input type="hidden" name="peternak_id" value="{{ $stok->peternak_id }}">
                                             <input type="hidden" name="jumlah" value="100">
 
-                                            <button type="submit" class="btn btn-primary w-100">
+                                            <button type="submit" class="btn btn-primary w-100"
+                                                    data-peternak-id="{{ $stok->peternak_id }}"
+                                                    data-peternak-name="{{ $stok->peternak->user->name }}">
                                                 <i class="fas fa-cart-plus"></i> Tambah 100 ekor
                                             </button>
                                         </form>
@@ -336,12 +344,70 @@
             </div>
         </div>
     </section>
+
+    <!-- Modal Konfirmasi Ganti Peternak -->
+<div class="modal fade" id="modalGantiPeternak" tabindex="-1" aria-labelledby="modalGantiPeternakLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" id="modalGantiPeternakLabel">
+                    <i class="fas fa-exclamation-triangle text-warning"></i> Ganti Peternak?
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <p class="mb-2">Keranjang Anda saat ini berisi item dari peternak:</p>
+                    <p class="fw-bold mb-2" id="currentPeternakName"></p>
+                    <p class="mb-2">Jika Anda melanjutkan, keranjang akan dikosongkan dan diganti dengan item dari peternak:</p>
+                    <p class="fw-bold mb-0" id="newPeternakName"></p>
+                </div>
+                <p class="text-muted small mb-0">Sistem hanya mendukung pemesanan dari satu peternak dalam satu waktu.</p>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Batal
+                </button>
+                <button type="button" class="btn btn-warning" id="btnKonfirmasiGanti">
+                    <i class="fas fa-check"></i> Ya, Ganti Peternak
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @section('scripts')
     @parent
 
     <script>
+        // Konfirmasi ganti peternak
+        const cartPeternakId = @json($cartPeternakId);
+        const cartPeternakName = @json($cartPeternakName);
+        let pendingForm = null;
+
+        document.querySelectorAll('.add-to-cart-form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                const btn = form.querySelector('button[data-peternak-id]');
+                const newPeternakId = parseInt(btn.dataset.peternakId);
+                const newPeternakName = btn.dataset.peternakName;
+
+                if (cartPeternakId && cartPeternakId != newPeternakId) {
+                    e.preventDefault();
+                    pendingForm = form;
+                    document.getElementById('currentPeternakName').textContent = cartPeternakName;
+                    document.getElementById('newPeternakName').textContent = newPeternakName;
+                    new bootstrap.Modal(document.getElementById('modalGantiPeternak')).show();
+                }
+            });
+        });
+
+        document.getElementById('btnKonfirmasiGanti').addEventListener('click', function() {
+            if (pendingForm) {
+                pendingForm.submit();
+            }
+        });
+
         let map;
 
         function initMap() {

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\StokBenih;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 
 class CartController extends Controller
@@ -109,7 +110,9 @@ class CartController extends Controller
             ? reset($cart)['peternak_name']
             : null;
 
-        return view('front.cart.index', compact('cart', 'total', 'peternakName'));
+        $alamatPembudidaya = Auth::user()->pembudidaya->alamat ?? '';
+
+        return view('front.cart.index', compact('cart', 'total', 'peternakName', 'alamatPembudidaya'));
     }
 
     public function update(Request $request, $id)

@@ -101,7 +101,7 @@
                                 enctype="multipart/form-data">
                                 @csrf
 
-                                <div class="mb-2">
+                                {{-- <div class="mb-2">
                                     <label class="form-label">Bukti Serah (opsional)</label>
                                     <input type="file" name="bukti_serah" class="form-control">
                                 </div>
@@ -109,7 +109,7 @@
                                 <div class="mb-2">
                                     <label class="form-label">Catatan</label>
                                     <textarea name="catatan" class="form-control"></textarea>
-                                </div>
+                                </div> --}}
 
                                 <button class="btn btn-success w-100">
                                     Konfirmasi Diterima

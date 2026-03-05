@@ -175,23 +175,77 @@
                                     <span>Total Ekor:</span>
                                     <strong>{{ number_format(array_sum(array_column($cart, 'jumlah'))) }} ekor</strong>
                                 </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Subtotal Benih:</span>
+                                    <strong id="grand-total">Rp {{ number_format($total, 0, ',', '.') }}</strong>
+                                </div>
+
                                 <hr>
+
+                                <!-- Pilihan Pengiriman -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold small">
+                                        <i class="fas fa-truck"></i> Pilihan Pengiriman
+                                    </label>
+                                    <div class="d-flex flex-column gap-2">
+                                        <div class="form-check border rounded p-2 ps-4">
+                                            <input class="form-check-input" type="radio"
+                                                   name="jenis_pengiriman_preview"
+                                                   id="opt_ambil"
+                                                   value="ambil_sendiri"
+                                                   checked
+                                                   onchange="togglePengiriman(this.value)">
+                                            <label class="form-check-label" for="opt_ambil">
+                                                <strong>Ambil Sendiri</strong>
+                                                <small class="text-muted d-block">Langsung ke lokasi peternak — Gratis</small>
+                                            </label>
+                                        </div>
+                                        <div class="form-check border rounded p-2 ps-4">
+                                            <input class="form-check-input" type="radio"
+                                                   name="jenis_pengiriman_preview"
+                                                   id="opt_diantar"
+                                                   value="diantar"
+                                                   onchange="togglePengiriman(this.value)">
+                                            <label class="form-check-label" for="opt_diantar">
+                                                <strong>Diantar ke Alamat Saya</strong>
+                                                <small class="text-muted d-block">+ Ongkir Rp 10.000</small>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div id="box-alamat" class="mt-2 d-none">
+                                        <label class="form-label small fw-semibold">Alamat Pengiriman:</label>
+                                        <textarea id="input-alamat" rows="3"
+                                                  class="form-control form-control-sm"
+                                                  oninput="syncAlamat(this.value)"
+                                                  placeholder="Alamat lengkap pengiriman...">{{ $alamatPembudidaya }}</textarea>
+                                        <small class="text-muted">Default: alamat profil Anda</small>
+                                    </div>
+                                </div>
+
+                                <!-- Row ongkir -->
+                                <div class="d-flex justify-content-between mb-2 d-none" id="row-ongkir">
+                                    <span>Ongkir:</span>
+                                    <strong class="text-warning">+ Rp 10.000</strong>
+                                </div>
+
                                 <div class="d-flex justify-content-between mb-3">
-                                    <h5 class="mb-0">Total Harga:</h5>
-                                    <h5 class="mb-0 text-success" id="grand-total">
+                                    <h5 class="mb-0">Total Bayar:</h5>
+                                    <h5 class="mb-0 text-success" id="grand-total-final">
                                         Rp {{ number_format($total, 0, ',', '.') }}
                                     </h5>
                                 </div>
 
                                 <div class="d-grid gap-2">
-                                    <!-- ✅ Update tombol checkout ini -->
-                                    <form action="{{ route('payment.checkout') }}" method="POST">
+                                    <form action="{{ route('payment.checkout') }}" method="POST" id="form-checkout">
                                         @csrf
+                                        <input type="hidden" name="jenis_pengiriman" id="hidden-jenis" value="ambil_sendiri">
+                                        <input type="hidden" name="alamat_pengiriman" id="hidden-alamat" value="{{ $alamatPembudidaya }}">
                                         <button type="submit" class="btn btn-success btn-lg w-100">
                                             <i class="fas fa-check-circle"></i> Checkout
                                         </button>
                                     </form>
-                                    
+
                                     <a href="{{ url('/#stok-benih') }}" class="btn btn-outline-secondary">
                                         <i class="fas fa-arrow-left"></i> Lanjut Belanja
                                     </a>
@@ -205,8 +259,34 @@
     </div>
 </div>
 
-@push('scripts')
+@section('scripts')
 <script>
+const baseTotal = {{ $total }};
+const ongkirValue = 10000;
+
+function togglePengiriman(value) {
+    const boxAlamat = document.getElementById('box-alamat');
+    const rowOngkir = document.getElementById('row-ongkir');
+    const hiddenJenis = document.getElementById('hidden-jenis');
+    const grandTotalFinal = document.getElementById('grand-total-final');
+
+    hiddenJenis.value = value;
+
+    if (value === 'diantar') {
+        boxAlamat.classList.remove('d-none');
+        rowOngkir.classList.remove('d-none');
+        grandTotalFinal.textContent = 'Rp ' + (baseTotal + ongkirValue).toLocaleString('id-ID');
+    } else {
+        boxAlamat.classList.add('d-none');
+        rowOngkir.classList.add('d-none');
+        grandTotalFinal.textContent = 'Rp ' + baseTotal.toLocaleString('id-ID');
+    }
+}
+
+function syncAlamat(value) {
+    document.getElementById('hidden-alamat').value = value;
+}
+
 function updateQuantity(cartId, change, maxStock) {
     const qtyInput = document.getElementById('qty-' + cartId);
     let currentQty = parseInt(qtyInput.value);
@@ -318,5 +398,5 @@ function removeItem(cartId) {
     });
 }
 </script>
-@endpush
+@endsection
 @endsection
