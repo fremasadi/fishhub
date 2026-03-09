@@ -37,10 +37,10 @@ class ProfileController extends Controller
                 'email' => $request->email,
             ]);
 
-            $user->pembudidaya->update([
-                'no_hp'  => $request->no_hp,
-                'alamat' => $request->alamat,
-            ]);
+            \App\Models\Pembudidaya::updateOrCreate(
+                ['user_id' => $user->id],
+                ['no_hp' => $request->no_hp, 'alamat' => $request->alamat]
+            );
 
             DB::commit();
 
