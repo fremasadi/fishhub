@@ -7,6 +7,19 @@
     <div class="py-5">
         <div class="container">
 
+            @if(session('success'))
+                <div class="alert alert-success alert-dismissible fade show">
+                    <i class="fas fa-check-circle me-1"></i> {{ session('success') }}
+                    <button class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            @endif
+            @if(session('error'))
+                <div class="alert alert-danger alert-dismissible fade show">
+                    <i class="fas fa-exclamation-circle me-1"></i> {{ session('error') }}
+                    <button class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            @endif
+
             <!-- HEADER -->
             <div class="mb-5">
                 <h1 class="fw-bold mb-2">
@@ -72,6 +85,12 @@
                                                     <span class="badge {{ $statusClass }} px-3 py-2">
                                                         {{ $statusLabel }}
                                                     </span>
+
+                                                    @if($pesanan->status_pesanan === 'Selesai')
+                                                        <span class="badge bg-primary px-3 py-2">
+                                                            <i class="fas fa-check-double me-1"></i> Selesai
+                                                        </span>
+                                                    @endif
                                                 @endif
                                             @else
                                                 <span class="badge bg-secondary px-3 py-2">
@@ -133,6 +152,20 @@
                                                     <i class="fas fa-box me-1"></i>
                                                     Lihat Detail Penerimaan
                                                 </button>
+                                            @endif
+
+                                            @if(
+                                                $pesanan->pengambilan &&
+                                                $pesanan->pengambilan->status_pengambilan === 'Diterima' &&
+                                                $pesanan->status_pesanan !== 'Selesai'
+                                            )
+                                                <form action="{{ route('payment.selesai', $pesanan->id) }}" method="POST" class="d-inline">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-primary btn-sm"
+                                                        onclick="return confirm('Konfirmasi pesanan ini sudah selesai?')">
+                                                        <i class="fas fa-check-double me-1"></i> Tandai Selesai
+                                                    </button>
+                                                </form>
                                             @endif
                                         </div>
                                     </div>

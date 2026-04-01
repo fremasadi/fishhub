@@ -286,6 +286,30 @@ class PaymentController extends Controller
     }
 
     /**
+     * Tandai pesanan selesai oleh pembudidaya
+     */
+    public function selesai(Pesanan $pesanan)
+    {
+        // Pastikan pesanan milik user yang login
+        if ($pesanan->pembudidaya_id !== Auth::id()) {
+            abort(403);
+        }
+
+        // Hanya bisa diselesaikan jika status pengambilan = Diterima
+        if (!$pesanan->pengambilan || $pesanan->pengambilan->status_pengambilan !== 'Diterima') {
+            return back()->with('error', 'Pesanan belum bisa ditandai selesai.');
+        }
+
+        if ($pesanan->status_pesanan === 'Selesai') {
+            return back()->with('error', 'Pesanan sudah berstatus Selesai.');
+        }
+
+        $pesanan->update(['status_pesanan' => 'Selesai']);
+
+        return back()->with('success', 'Pesanan berhasil ditandai sebagai Selesai.');
+    }
+
+    /**
      * Show user's order history
      */
     public function history()

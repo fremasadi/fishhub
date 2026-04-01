@@ -78,6 +78,9 @@ Route::middleware('auth')->group(function () {
     // Order history
     Route::get('/my-orders', [PaymentController::class, 'history'])->name('payment.history');
 
+    // Tandai pesanan selesai oleh pembudidaya
+    Route::post('/payment/{pesanan}/selesai', [PaymentController::class, 'selesai'])->name('payment.selesai');
+
     // Payment finish (redirect from Midtrans)
     Route::get('/payment/finish', [PaymentController::class, 'finish'])->name('payment.finish');
 });
