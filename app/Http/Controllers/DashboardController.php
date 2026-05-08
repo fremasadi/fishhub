@@ -35,8 +35,8 @@ class DashboardController extends Controller
             
             // Pesanan statistik
             'totalPesanan' => Pesanan::count(),
-            'pesananPending' => Pesanan::where('status_pesanan', 'Pending')->count(),
-            'pesananDiproses' => Pesanan::where('status_pesanan', 'Diproses')->count(),
+            'pesananPending' => Pesanan::where('status_pesanan', 'Menunggu')->count(),
+            'pesananDiproses' => Pesanan::where('status_pesanan', 'Dibayar')->count(),
             'pesananSelesai' => Pesanan::where('status_pesanan', 'Selesai')->count(),
             
             // Pembayaran statistik
@@ -95,9 +95,9 @@ class DashboardController extends Controller
             // Pesanan statistik
             'totalPesanan' => Pesanan::where('peternak_id', $peternak->id)->count(),
             'pesananPending' => Pesanan::where('peternak_id', $peternak->id)
-                ->where('status_pesanan', 'Pending')->count(),
+                ->where('status_pesanan', 'Menunggu')->count(),
             'pesananDiproses' => Pesanan::where('peternak_id', $peternak->id)
-                ->where('status_pesanan', 'Diproses')->count(),
+                ->where('status_pesanan', 'Dibayar')->count(),
             'pesananSelesai' => Pesanan::where('peternak_id', $peternak->id)
                 ->where('status_pesanan', 'Selesai')->count(),
             
