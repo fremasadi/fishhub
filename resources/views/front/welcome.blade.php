@@ -71,6 +71,24 @@
             border-radius: 0.25rem;
             font-weight: 600;
         }
+
+        .review-rating-btn {
+            border: 0;
+            background: transparent;
+            padding: 0;
+            color: #ffc107;
+            font-weight: 700;
+            text-align: left;
+        }
+
+        .review-rating-btn:hover {
+            color: #e0a800;
+            text-decoration: underline;
+        }
+
+        .review-star-muted {
+            color: #d1d5db;
+        }
     </style>
 @endsection
 
@@ -244,6 +262,31 @@
                             <p class="mb-1 text-muted">
                                 <i class="fas fa-user"></i> {{ $stok->peternak->user->name }}
                             </p>
+                            @php
+                                $peternakReviews = $stok->peternak->reviews ?? collect();
+                                $averageRating = $peternakReviews->avg('rating');
+                                $roundedRating = $averageRating ? round($averageRating) : 0;
+                            @endphp
+                            <div class="mb-2">
+                                @if($peternakReviews->count() > 0)
+                                    <button type="button" class="review-rating-btn small"
+                                            onclick="openReviewModal({{ $stok->peternak->id }})">
+                                        @for($i = 1; $i <= 5; $i++)
+                                            <i class="{{ $i <= $roundedRating ? 'fas' : 'far' }} fa-star"></i>
+                                        @endfor
+                                        <span class="text-muted ms-1">
+                                            {{ number_format($averageRating, 1) }} ({{ $peternakReviews->count() }} review)
+                                        </span>
+                                    </button>
+                                @else
+                                    <small class="text-muted">
+                                        @for($i = 1; $i <= 5; $i++)
+                                            <i class="far fa-star review-star-muted"></i>
+                                        @endfor
+                                        Belum ada review
+                                    </small>
+                                @endif
+                            </div>
                             <p class="mb-1 text-muted">
                                 <i class="fas fa-box"></i> Stok: {{ number_format($stok->jumlah) }} ekor
                             </p>
@@ -318,6 +361,20 @@
             <p class="text-muted">Temukan peternak terdekat di sekitar Anda</p>
         </div>
 
+        <div class="row justify-content-center mb-4">
+            <div class="col-md-6">
+                <label for="filter-peternak-map" class="form-label fw-semibold">
+                    <i class="fas fa-filter"></i> Filter Peternak
+                </label>
+                <select id="filter-peternak-map" class="form-control" onchange="filterPeternakMap(this.value)">
+                    <option value="">Semua Peternak</option>
+                    @foreach($peternaks as $peternak)
+                        <option value="{{ $peternak->id }}">{{ $peternak->user->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
+
         <div class="card">
             <div class="card-body p-0">
                 <div id="map"></div>
@@ -375,6 +432,58 @@
         </div>
     </div>
 </div>
+
+<!-- Modal Detail Review Peternak -->
+@foreach($stokBenihs->pluck('peternak')->filter()->unique('id') as $peternakReview)
+    @if($peternakReview->reviews->count() > 0)
+        <div class="modal fade" id="reviewModal-{{ $peternakReview->id }}" tabindex="-1"
+             aria-labelledby="reviewModalLabel-{{ $peternakReview->id }}" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <div>
+                            <h5 class="modal-title fw-bold" id="reviewModalLabel-{{ $peternakReview->id }}">
+                                <i class="fas fa-star text-warning"></i> Review {{ $peternakReview->user->name }}
+                            </h5>
+                            <small class="text-muted">
+                                Rata-rata {{ number_format($peternakReview->reviews->avg('rating'), 1) }}
+                                dari {{ $peternakReview->reviews->count() }} review
+                            </small>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        @foreach($peternakReview->reviews->sortByDesc('created_at') as $review)
+                            <div class="border rounded p-3 mb-3">
+                                <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
+                                    <div>
+                                        <strong>{{ $review->pembudidaya->name ?? 'Pembudidaya' }}</strong>
+                                        <small class="text-muted d-block">
+                                            {{ $review->created_at->format('d M Y') }}
+                                        </small>
+                                    </div>
+                                    <div class="text-warning text-nowrap">
+                                        @for($i = 1; $i <= 5; $i++)
+                                            <i class="{{ $i <= $review->rating ? 'fas' : 'far' }} fa-star"></i>
+                                        @endfor
+                                    </div>
+                                </div>
+                                <p class="mb-0 text-muted">
+                                    {{ $review->komentar ?: 'Tidak ada komentar.' }}
+                                </p>
+                            </div>
+                        @endforeach
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            Tutup
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+@endforeach
 @endsection
 
 @section('scripts')
@@ -408,7 +517,93 @@
             }
         });
 
+        function openReviewModal(peternakId) {
+            const modalEl = document.getElementById('reviewModal-' + peternakId);
+
+            if (!modalEl) {
+                return;
+            }
+
+            new bootstrap.Modal(modalEl).show();
+        }
+
         let map;
+        const peternakMarkers = [];
+
+        function escapeHtml(value) {
+            return String(value ?? '-')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function formatRupiah(value) {
+            return 'Rp ' + Number(value ?? 0).toLocaleString('id-ID');
+        }
+
+        function renderStokBenihList(stokBenihs) {
+            if (!stokBenihs || stokBenihs.length === 0) {
+                return `
+                    <div class="alert alert-warning py-2 px-3 mb-0 small">
+                        Belum ada benih tersedia.
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="mt-2 pt-2 border-top">
+                    <p class="fw-bold small mb-2">
+                        <i class="fas fa-fish"></i> Benih yang dijual
+                    </p>
+                    <div style="max-height:180px; overflow-y:auto;">
+                        ${stokBenihs.map(stok => `
+                            <div class="border rounded p-2 mb-2">
+                                <div class="fw-bold small">${escapeHtml(stok.jenis)}</div>
+                                <div class="small text-muted">
+                                    ${escapeHtml(stok.ukuran)} | ${escapeHtml(stok.kualitas)}
+                                </div>
+                                <div class="small">
+                                    <i class="fas fa-box"></i> ${Number(stok.jumlah ?? 0).toLocaleString('id-ID')} ekor
+                                </div>
+                                <div class="small text-success fw-bold">
+                                    ${formatRupiah(stok.harga)} / ekor
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function setMapBoundsByMarkers(markers) {
+            const visibleMarkers = markers.filter(marker => marker.getVisible());
+
+            if (visibleMarkers.length === 0) {
+                map.setCenter({ lat: -7.8166, lng: 112.0115 });
+                map.setZoom(10);
+                return;
+            }
+
+            const bounds = new google.maps.LatLngBounds();
+            visibleMarkers.forEach(marker => bounds.extend(marker.getPosition()));
+
+            if (visibleMarkers.length === 1) {
+                map.setCenter(visibleMarkers[0].getPosition());
+                map.setZoom(14);
+            } else {
+                map.fitBounds(bounds);
+            }
+        }
+
+        function filterPeternakMap(peternakId) {
+            peternakMarkers.forEach(({ marker, peternak }) => {
+                marker.setVisible(!peternakId || String(peternak.id) === String(peternakId));
+            });
+
+            setMapBoundsByMarkers(peternakMarkers.map(item => item.marker));
+        }
 
         function initMap() {
             const centerKediri = {
@@ -464,17 +659,18 @@
 
                 const infoWindow = new google.maps.InfoWindow({
                     content: `
-                    <div style="min-width:200px">
-                        <h6 class="fw-bold mb-1">${peternak.user.name}</h6>
+                    <div style="min-width:260px; max-width:320px;">
+                        <h6 class="fw-bold mb-1">${escapeHtml(peternak.user?.name)}</h6>
                         <p class="mb-1 small text-muted">
-                            <i class="fas fa-map-marker-alt"></i> ${peternak.alamat ?? '-'}
+                            <i class="fas fa-map-marker-alt"></i> ${escapeHtml(peternak.alamat)}
                         </p>
                         <p class="mb-1 small text-muted">
-                            <i class="fas fa-phone"></i> ${peternak.no_hp ?? '-'}
+                            <i class="fas fa-phone"></i> ${escapeHtml(peternak.no_hp)}
                         </p>
                         <span class="badge ${peternak.status_aktif ? 'bg-success' : 'bg-secondary'}">
                             ${peternak.status_aktif ? 'Aktif' : 'Tidak Aktif'}
                         </span>
+                        ${renderStokBenihList(peternak.stok_benihs)}
                     </div>
                     `
                 });
@@ -483,6 +679,7 @@
                     infoWindow.open(map, marker);
                 });
 
+                peternakMarkers.push({ marker, peternak });
                 bounds.extend(position);
             });
 

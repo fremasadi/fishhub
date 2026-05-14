@@ -28,152 +28,165 @@
                 <p class="text-muted">Lihat semua pesanan yang pernah Anda buat</p>
             </div>
 
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <form method="GET" action="{{ route('payment.history') }}" class="row g-3 align-items-end">
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold small">Tanggal Awal</label>
+                            <input type="date" name="tanggal_awal" class="form-control"
+                                value="{{ request('tanggal_awal') }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold small">Tanggal Akhir</label>
+                            <input type="date" name="tanggal_akhir" class="form-control"
+                                value="{{ request('tanggal_akhir') }}">
+                        </div>
+                        <div class="col-md-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-filter me-1"></i> Filter
+                            </button>
+                            <a href="{{ route('payment.history') }}" class="btn btn-secondary">
+                                Reset
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
             @if ($pesanans->count() > 0)
-                <div class="row g-4">
-                    @foreach ($pesanans as $pesanan)
-                        @php
-                            $pembayaran = $pesanan->pembayaran;
-                        @endphp
-
-                        <div class="col-12">
-                            <div class="card shadow-sm hover-card">
-                                <div class="card-body">
-
-                                    <!-- HEADER CARD -->
-                                    <div class="d-flex justify-content-between align-items-start mb-3 pb-3 border-bottom">
-
-                                        {{-- KIRI --}}
-                                        <div>
-                                            <h5 class="fw-bold mb-1">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Kode Pesanan</th>
+                                        <th>Tanggal</th>
+                                        <th>Peternak</th>
+                                        <th>Item Pesanan</th>
+                                        <th>Status Bayar</th>
+                                        <th>Status Terima</th>
+                                        <th class="text-end">Total</th>
+                                        <th class="text-center">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($pesanans as $pesanan)
+                                        @php
+                                            $pembayaran = $pesanan->pembayaran;
+                                            $status = $pesanan->pengambilan?->status_pengambilan;
+                                            $statusLabel = match ($status) {
+                                                'Menunggu' => 'Menunggu Diambil',
+                                                'Siap Diambil' => 'Siap Diambil Pembudidaya',
+                                                'Diterima' => 'Benih Telah Diterima',
+                                                default => $status,
+                                            };
+                                            $statusClass = match ($status) {
+                                                'Menunggu' => 'bg-warning',
+                                                'Siap Diambil' => 'bg-info',
+                                                'Diterima' => 'bg-success',
+                                                default => 'bg-secondary',
+                                            };
+                                        @endphp
+                                        <tr>
+                                            <td>{{ $loop->iteration + ($pesanans->currentPage() - 1) * $pesanans->perPage() }}</td>
+                                            <td class="fw-bold">
                                                 {{ $pembayaran->order_id ?? 'Order #' . $pesanan->id }}
-                                            </h5>
-                                            <small class="text-muted">
-                                                <i class="fas fa-calendar-alt me-1"></i>
-                                                {{ $pesanan->created_at->format('d M Y, H:i') }}
-                                            </small>
-                                        </div>
-
-                                        {{-- KANAN --}}
-                                        <div class="d-flex flex-column align-items-end gap-1">
-
-                                            @if ($pembayaran)
-                                                {{-- STATUS PEMBAYARAN --}}
-                                                <span class="badge bg-{{ $pembayaran->getStatusBadgeClass() }} px-3 py-2">
-                                                    {{ $pembayaran->getStatusLabel() }}
-                                                </span>
-
-                                                {{-- STATUS PENGAMBILAN --}}
-                                                @if ($pesanan->pembayaran->isSuccess() && $pesanan->pengambilan)
-                                                    @php
-                                                        $status = $pesanan->pengambilan->status_pengambilan;
-
-                                                        $statusLabel = match ($status) {
-                                                            'Menunggu' => 'Menunggu Diambil',
-                                                            'Siap Diambil' => 'Siap Diambil Pembudidaya',
-                                                            'Diterima' => 'Benih Telah Diterima',
-                                                            default => $status,
-                                                        };
-
-                                                        $statusClass = match ($status) {
-                                                            'Menunggu' => 'bg-warning',
-                                                            'Siap Diambil' => 'bg-info',
-                                                            'Diterima' => 'bg-success',
-                                                            default => 'bg-secondary',
-                                                        };
-                                                    @endphp
-
-                                                    <span class="badge {{ $statusClass }} px-3 py-2">
+                                            </td>
+                                            <td>
+                                                {{ $pesanan->created_at->format('d M Y') }}
+                                                <small class="text-muted d-block">{{ $pesanan->created_at->format('H:i') }}</small>
+                                            </td>
+                                            <td>{{ $pesanan->peternak->user->name ?? 'N/A' }}</td>
+                                            <td>
+                                                @foreach ($pesanan->details as $detail)
+                                                    <div class="mb-1">
+                                                        <span class="fw-semibold">{{ $detail->stokBenih->jenis ?? 'N/A' }}</span>
+                                                        <small class="text-muted d-block">
+                                                            {{ $detail->stokBenih->ukuran ?? '-' }} | Qty: {{ number_format($detail->qty) }}
+                                                        </small>
+                                                    </div>
+                                                @endforeach
+                                            </td>
+                                            <td>
+                                                @if ($pembayaran)
+                                                    <span class="badge bg-{{ $pembayaran->getStatusBadgeClass() }}">
+                                                        {{ $pembayaran->getStatusLabel() }}
+                                                    </span>
+                                                @else
+                                                    <span class="badge bg-secondary">No Payment Data</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if ($pesanan->pembayaran?->isSuccess() && $pesanan->pengambilan)
+                                                    <span class="badge {{ $statusClass }}">
                                                         {{ $statusLabel }}
                                                     </span>
 
                                                     @if($pesanan->status_pesanan === 'Selesai')
-                                                        <span class="badge bg-primary px-3 py-2">
+                                                        <span class="badge bg-primary mt-1">
                                                             <i class="fas fa-check-double me-1"></i> Selesai
                                                         </span>
                                                     @endif
+                                                @else
+                                                    <span class="text-muted">-</span>
                                                 @endif
-                                            @else
-                                                <span class="badge bg-secondary px-3 py-2">
-                                                    No Payment Data
-                                                </span>
-                                            @endif
-
-                                        </div>
-                                    </div>
-
-                                    <!-- PETERNAK INFO -->
-                                    <div class="mb-3">
-                                        <small class="text-muted d-block mb-1">Peternak:</small>
-                                        <strong>
-                                            <i class="fas fa-store text-primary me-1"></i>
-                                            {{ $pesanan->peternak->user->name ?? 'N/A' }}
-                                        </strong>
-                                    </div>
-
-                                    <!-- ITEMS LIST -->
-                                    <div class="mb-3">
-                                        <small class="text-muted d-block mb-2">Item Pesanan:</small>
-
-                                        @foreach ($pesanan->details as $detail)
-                                            <div
-                                                class="d-flex justify-content-between align-items-center p-2 bg-light rounded mb-2">
-                                                <div class="flex-grow-1">
-                                                    <div class="fw-bold">{{ $detail->stokBenih->jenis ?? 'N/A' }}</div>
-                                                    <small class="text-muted">
-                                                        Ukuran: {{ $detail->stokBenih->ukuran ?? '-' }}
-                                                        | Qty: {{ $detail->qty }}
-                                                    </small>
-                                                </div>
-                                                <div class="text-end">
-                                                    <div class="fw-bold text-danger">
-                                                        Rp {{ number_format($detail->subtotal, 0, ',', '.') }}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        @endforeach
-                                    </div>
-
-                                    <!-- TOTAL & ACTION -->
-                                    <div class="d-flex justify-content-between align-items-center pt-3 border-top">
-                                        <div>
-                                            <small class="text-muted d-block">Total Pembayaran</small>
-                                            <h4 class="fw-bold text-danger mb-0">
+                                            </td>
+                                            <td class="text-end fw-bold text-danger">
                                                 Rp {{ number_format($pesanan->total_harga, 0, ',', '.') }}
-                                            </h4>
-                                        </div>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex flex-column gap-1 align-items-stretch">
+                                                    <a href="{{ route('payment.show', $pesanan->id) }}" class="btn btn-primary btn-sm">
+                                                        <i class="fas fa-eye me-1"></i> Detail
+                                                    </a>
+                                                    @if ($pesanan->pembayaran && $pesanan->pembayaran->isSuccess() && $pesanan->pengambilan)
+                                                        <button type="button" class="btn btn-outline-success btn-sm"
+                                                            onclick="openPengambilan({{ $pesanan->id }})">
+                                                            <i class="fas fa-box me-1"></i> Penerimaan
+                                                        </button>
+                                                    @endif
 
-                                        <div>
-                                            <a href="{{ route('payment.show', $pesanan->id) }}" class="btn btn-primary">
-                                                <i class="fas fa-eye me-2"></i> Lihat Detail
-                                            </a>
-                                            @if ($pesanan->pembayaran && $pesanan->pembayaran->isSuccess() && $pesanan->pengambilan)
-                                                <button type="button" class="btn btn-outline-success btn-sm"
-                                                    onclick="openPengambilan({{ $pesanan->id }})">
-                                                    <i class="fas fa-box me-1"></i>
-                                                    Lihat Detail Penerimaan
-                                                </button>
-                                            @endif
+                                                    @if(
+                                                        $pesanan->pengambilan &&
+                                                        $pesanan->pengambilan->status_pengambilan === 'Diterima'
+                                                    )
+                                                        @if($pesanan->review)
+                                                            <button type="button" class="btn btn-outline-warning btn-sm" disabled>
+                                                                <i class="fas fa-star me-1"></i> Sudah Direview
+                                                            </button>
+                                                        @else
+                                                            <button type="button" class="btn btn-warning btn-sm"
+                                                                onclick="openReview({{ $pesanan->id }})">
+                                                                <i class="fas fa-star me-1"></i> Review
+                                                            </button>
+                                                        @endif
+                                                    @endif
 
-                                            @if(
-                                                $pesanan->pengambilan &&
-                                                $pesanan->pengambilan->status_pengambilan === 'Diterima' &&
-                                                $pesanan->status_pesanan !== 'Selesai'
-                                            )
-                                                <form action="{{ route('payment.selesai', $pesanan->id) }}" method="POST" class="d-inline">
-                                                    @csrf
-                                                    <button type="submit" class="btn btn-primary btn-sm"
-                                                        onclick="return confirm('Konfirmasi pesanan ini sudah selesai?')">
-                                                        <i class="fas fa-check-double me-1"></i> Tandai Selesai
-                                                    </button>
-                                                </form>
-                                            @endif
-                                        </div>
-                                    </div>
-
-                                </div>
-                            </div>
+                                                    @if(
+                                                        $pesanan->pengambilan &&
+                                                        $pesanan->pengambilan->status_pengambilan === 'Diterima' &&
+                                                        $pesanan->status_pesanan !== 'Selesai'
+                                                    )
+                                                        <form action="{{ route('payment.selesai', $pesanan->id) }}" method="POST">
+                                                            @csrf
+                                                            <button type="submit" class="btn btn-outline-primary btn-sm w-100"
+                                                                onclick="return confirm('Konfirmasi pesanan ini sudah selesai?')">
+                                                                <i class="fas fa-check-double me-1"></i> Selesai
+                                                            </button>
+                                                        </form>
+                                                    @endif
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
                         </div>
-                    @endforeach
+                    </div>
+                </div>
+                <div class="row g-4">
                     @foreach ($pesanans as $pesanan)
                         @if ($pesanan->pengambilan)
                             <div class="modal fade" id="pengambilanModal-{{ $pesanan->id }}" tabindex="-1"
@@ -280,6 +293,69 @@
                             </div>
                         @endif
                     @endforeach
+                    @foreach ($pesanans as $pesanan)
+                        @if (
+                            $pesanan->pengambilan &&
+                            $pesanan->pengambilan->status_pengambilan === 'Diterima' &&
+                            !$pesanan->review
+                        )
+                            <div class="modal fade" id="reviewModal-{{ $pesanan->id }}" tabindex="-1"
+                                aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content">
+                                        <form action="{{ route('payment.review', $pesanan->id) }}" method="POST">
+                                            @csrf
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">
+                                                    <i class="fas fa-star text-warning me-2"></i> Review Pesanan
+                                                </h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+
+                                            <div class="modal-body">
+                                                <div class="mb-3">
+                                                    <small class="text-muted d-block mb-1">Peternak</small>
+                                                    <strong>{{ $pesanan->peternak->user->name ?? '-' }}</strong>
+                                                </div>
+
+                                                <div class="mb-3">
+                                                    <label for="rating-{{ $pesanan->id }}" class="form-label fw-semibold">
+                                                        Rating
+                                                    </label>
+                                                    <select id="rating-{{ $pesanan->id }}" name="rating" class="form-control" required>
+                                                        <option value="">Pilih rating</option>
+                                                        <option value="5">5 - Sangat Baik</option>
+                                                        <option value="4">4 - Baik</option>
+                                                        <option value="3">3 - Cukup</option>
+                                                        <option value="2">2 - Kurang</option>
+                                                        <option value="1">1 - Buruk</option>
+                                                    </select>
+                                                </div>
+
+                                                <div class="mb-0">
+                                                    <label for="komentar-{{ $pesanan->id }}" class="form-label fw-semibold">
+                                                        Komentar
+                                                    </label>
+                                                    <textarea id="komentar-{{ $pesanan->id }}" name="komentar"
+                                                        class="form-control" rows="4"
+                                                        placeholder="Tulis pengalaman Anda menerima benih..."></textarea>
+                                                </div>
+                                            </div>
+
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                    Batal
+                                                </button>
+                                                <button type="submit" class="btn btn-warning">
+                                                    <i class="fas fa-paper-plane me-1"></i> Kirim Review
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+                    @endforeach
                 </div>
 
                 <!-- PAGINATION -->
@@ -320,6 +396,18 @@
 
             if (!modalEl) {
                 console.error('Modal tidak ditemukan untuk ID:', id);
+                return;
+            }
+
+            const modal = new bootstrap.Modal(modalEl);
+            modal.show();
+        }
+
+        function openReview(id) {
+            const modalEl = document.getElementById('reviewModal-' + id);
+
+            if (!modalEl) {
+                console.error('Modal review tidak ditemukan untuk ID:', id);
                 return;
             }
 

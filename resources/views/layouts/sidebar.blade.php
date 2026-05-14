@@ -120,6 +120,13 @@
                 <span>Riwayat Pembayaran</span>
             </a>
         </li>
+
+        <li class="nav-item {{ request()->routeIs('peternak.laporan.*') ? 'active' : '' }}">
+            <a class="nav-link" href="{{ route('peternak.laporan.penjualan') }}">
+                <i class="fas fa-fw fa-chart-line"></i>
+                <span>Laporan Penjualan</span>
+            </a>
+        </li>
     @endif
 
     <!-- Divider -->

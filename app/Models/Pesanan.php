@@ -88,5 +88,9 @@ class Pesanan extends Model
 {
     return $this->hasOne(Pengambilan::class, 'pesanan_id');
 }
-}
 
+    public function review(): HasOne
+    {
+        return $this->hasOne(Review::class, 'pesanan_id');
+    }
+}

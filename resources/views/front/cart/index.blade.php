@@ -114,7 +114,7 @@
                                                        min="100" 
                                                        step="10"
                                                        max="{{ $item['stok_tersedia'] }}"
-                                                       onchange="updateQuantityManual('{{ $id }}', {{ $item['stok_tersedia'] }})">
+                                                       oninput="updateQuantityManualAuto('{{ $id }}', {{ $item['stok_tersedia'] }})">
                                                 <button class="btn btn-outline-secondary" 
                                                         type="button"
                                                         onclick="updateQuantity('{{ $id }}', 10, {{ $item['stok_tersedia'] }})">
@@ -220,6 +220,10 @@
                                                   oninput="syncAlamat(this.value)"
                                                   placeholder="Alamat lengkap pengiriman...">{{ $alamatPembudidaya }}</textarea>
                                         <small class="text-muted">Default: alamat profil Anda</small>
+                                        <div id="distance-info" class="alert alert-secondary py-2 px-3 mt-2 mb-0 small d-none">
+                                            <i class="fas fa-route"></i>
+                                            <span id="distance-text">Masukkan alamat untuk menghitung jarak.</span>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -261,30 +265,154 @@
 
 @section('scripts')
 <script>
-const baseTotal = {{ $total }};
+let baseTotal = {{ $total }};
 const ongkirValue = 10000;
+const quantityUpdateTimers = {};
+const peternakLocation = {
+    lat: @json($peternak?->latitude ? (float) $peternak->latitude : null),
+    lng: @json($peternak?->longitude ? (float) $peternak->longitude : null),
+};
+let cartGeocoder = null;
+let cartDistanceService = null;
+let addressDistanceTimer = null;
+
+function refreshGrandTotalFinal() {
+    const jenisPengiriman = document.getElementById('hidden-jenis').value;
+    const grandTotalFinal = document.getElementById('grand-total-final');
+    const totalBayar = jenisPengiriman === 'diantar' ? baseTotal + ongkirValue : baseTotal;
+
+    grandTotalFinal.textContent = 'Rp ' + totalBayar.toLocaleString('id-ID');
+}
 
 function togglePengiriman(value) {
     const boxAlamat = document.getElementById('box-alamat');
     const rowOngkir = document.getElementById('row-ongkir');
     const hiddenJenis = document.getElementById('hidden-jenis');
-    const grandTotalFinal = document.getElementById('grand-total-final');
 
     hiddenJenis.value = value;
 
     if (value === 'diantar') {
         boxAlamat.classList.remove('d-none');
         rowOngkir.classList.remove('d-none');
-        grandTotalFinal.textContent = 'Rp ' + (baseTotal + ongkirValue).toLocaleString('id-ID');
     } else {
         boxAlamat.classList.add('d-none');
         rowOngkir.classList.add('d-none');
-        grandTotalFinal.textContent = 'Rp ' + baseTotal.toLocaleString('id-ID');
+    }
+
+    refreshGrandTotalFinal();
+
+    if (value === 'diantar') {
+        calculateDeliveryDistance();
     }
 }
 
 function syncAlamat(value) {
     document.getElementById('hidden-alamat').value = value;
+    clearTimeout(addressDistanceTimer);
+    addressDistanceTimer = setTimeout(calculateDeliveryDistance, 700);
+}
+
+function initCartDistance() {
+    if (window.google && google.maps) {
+        cartGeocoder = new google.maps.Geocoder();
+        cartDistanceService = new google.maps.DistanceMatrixService();
+        calculateDeliveryDistance();
+    }
+}
+
+function showDistanceInfo(message, type = 'secondary') {
+    const distanceInfo = document.getElementById('distance-info');
+    const distanceText = document.getElementById('distance-text');
+
+    distanceInfo.className = `alert alert-${type} py-2 px-3 mt-2 mb-0 small`;
+    distanceInfo.classList.remove('d-none');
+    distanceText.textContent = message;
+}
+
+function calculateDistanceKm(origin, destination) {
+    const earthRadiusKm = 6371;
+    const dLat = (destination.lat - origin.lat) * Math.PI / 180;
+    const dLng = (destination.lng - origin.lng) * Math.PI / 180;
+    const lat1 = origin.lat * Math.PI / 180;
+    const lat2 = destination.lat * Math.PI / 180;
+
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1) * Math.cos(lat2) *
+        Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return earthRadiusKm * c;
+}
+
+function calculateDeliveryDistance() {
+    const jenisPengiriman = document.getElementById('hidden-jenis').value;
+    const alamat = document.getElementById('input-alamat')?.value.trim();
+
+    if (jenisPengiriman !== 'diantar') {
+        return;
+    }
+
+    if (!peternakLocation.lat || !peternakLocation.lng) {
+        showDistanceInfo('Koordinat peternak belum tersedia, jarak belum bisa dihitung.', 'warning');
+        return;
+    }
+
+    if (!alamat) {
+        showDistanceInfo('Masukkan alamat untuk menghitung jarak.', 'secondary');
+        return;
+    }
+
+    if (!cartGeocoder) {
+        showDistanceInfo('Memuat layanan peta untuk menghitung jarak...', 'secondary');
+        return;
+    }
+
+    showDistanceInfo('Menghitung jarak pengiriman...', 'secondary');
+
+    cartGeocoder.geocode({ address: alamat }, (results, status) => {
+        if (status !== 'OK' || !results[0]) {
+            showDistanceInfo('Alamat belum ditemukan. Coba isi alamat lebih lengkap.', 'warning');
+            return;
+        }
+
+        const location = results[0].geometry.location;
+        const customerLocation = {
+            lat: location.lat(),
+            lng: location.lng(),
+        };
+
+        if (!cartDistanceService) {
+            const distanceKm = calculateDistanceKm(customerLocation, peternakLocation);
+            showDistanceInfo(
+                `Perkiraan jarak dari alamat pengiriman ke peternak: ${distanceKm.toFixed(2)} km.`,
+                'info'
+            );
+            return;
+        }
+
+        cartDistanceService.getDistanceMatrix({
+            origins: [customerLocation],
+            destinations: [peternakLocation],
+            travelMode: google.maps.TravelMode.DRIVING,
+            unitSystem: google.maps.UnitSystem.METRIC,
+        }, (response, distanceStatus) => {
+            const result = response?.rows?.[0]?.elements?.[0];
+
+            if (distanceStatus === 'OK' && result?.status === 'OK') {
+                showDistanceInfo(
+                    `Perkiraan jarak pengiriman ke peternak: ${result.distance.text}.`,
+                    'info'
+                );
+                return;
+            }
+
+            const distanceKm = calculateDistanceKm(customerLocation, peternakLocation);
+            showDistanceInfo(
+                `Perkiraan jarak ke peternak: ${distanceKm.toFixed(2)} km.`,
+                'info'
+            );
+        });
+    });
 }
 
 function updateQuantity(cartId, change, maxStock) {
@@ -321,6 +449,8 @@ function updateQuantity(cartId, change, maxStock) {
                 'Rp ' + data.subtotal.toLocaleString('id-ID');
             document.getElementById('grand-total').textContent = 
                 'Rp ' + data.total.toLocaleString('id-ID');
+            baseTotal = data.total;
+            refreshGrandTotalFinal();
         } else {
             alert(data.message);
         }
@@ -331,14 +461,26 @@ function updateQuantity(cartId, change, maxStock) {
     });
 }
 
+function updateQuantityManualAuto(cartId, maxStock) {
+    clearTimeout(quantityUpdateTimers[cartId]);
+
+    quantityUpdateTimers[cartId] = setTimeout(() => {
+        updateQuantityManual(cartId, maxStock);
+    }, 500);
+}
+
 function updateQuantityManual(cartId, maxStock) {
     const qtyInput = document.getElementById('qty-' + cartId);
     let newQty = parseInt(qtyInput.value);
 
+    if (Number.isNaN(newQty)) {
+        return;
+    }
+
     if (newQty < 100) {
         alert('Minimal pemesanan adalah 100 ekor!');
         qtyInput.value = 100;
-        return;
+        newQty = 100;
     }
 
     if (newQty > maxStock) {
@@ -363,6 +505,8 @@ function updateQuantityManual(cartId, maxStock) {
                 'Rp ' + data.subtotal.toLocaleString('id-ID');
             document.getElementById('grand-total').textContent = 
                 'Rp ' + data.total.toLocaleString('id-ID');
+            baseTotal = data.total;
+            refreshGrandTotalFinal();
         } else {
             alert(data.message);
         }
@@ -398,5 +542,6 @@ function removeItem(cartId) {
     });
 }
 </script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD8l6eRve8pNpEzOfgosulUBmxD5qFZ370&callback=initCartDistance" async defer></script>
 @endsection
 @endsection

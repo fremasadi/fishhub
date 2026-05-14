@@ -10,7 +10,7 @@ class WelcomeController extends Controller
 {
     public function index(Request $request)
     {
-        $query = StokBenih::with(['peternak.user'])
+        $query = StokBenih::with(['peternak.user', 'peternak.reviews.pembudidaya'])
             ->where('status_stok', 'Tersedia');
 
         // FILTER JENIS IKAN
@@ -22,7 +22,15 @@ class WelcomeController extends Controller
             ->orderBy('tanggal_input', 'desc')
             ->get();
 
-        $peternaks = Peternak::with('user')
+        $peternaks = Peternak::with([
+                'user',
+                'reviews.pembudidaya',
+                'stokBenihs' => function ($query) {
+                    $query->where('status_stok', 'Tersedia')
+                        ->orderBy('jenis')
+                        ->orderBy('ukuran');
+                },
+            ])
             ->whereNotNull('latitude')
             ->whereNotNull('longitude')
             ->get();

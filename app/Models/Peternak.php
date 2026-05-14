@@ -36,4 +36,9 @@ class Peternak extends Model
 {
     return $this->hasMany(Pengambilan::class, 'peternak_id');
 }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class, 'peternak_id');
+    }
 }

@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Models\Pengambilan;
+use App\Models\Review;
 
 class PaymentController extends Controller
 {
@@ -309,15 +310,56 @@ class PaymentController extends Controller
         return back()->with('success', 'Pesanan berhasil ditandai sebagai Selesai.');
     }
 
+    public function review(Request $request, Pesanan $pesanan)
+    {
+        if ($pesanan->pembudidaya_id !== Auth::id()) {
+            abort(403);
+        }
+
+        if (!$pesanan->pengambilan || $pesanan->pengambilan->status_pengambilan !== 'Diterima') {
+            return back()->with('error', 'Review hanya bisa diberikan setelah benih diterima.');
+        }
+
+        if ($pesanan->review) {
+            return back()->with('error', 'Pesanan ini sudah direview.');
+        }
+
+        $validated = $request->validate([
+            'rating' => ['required', 'integer', 'min:1', 'max:5'],
+            'komentar' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        Review::create([
+            'pesanan_id' => $pesanan->id,
+            'pembudidaya_id' => Auth::id(),
+            'peternak_id' => $pesanan->peternak_id,
+            'rating' => $validated['rating'],
+            'komentar' => $validated['komentar'] ?? null,
+        ]);
+
+        return back()->with('success', 'Terima kasih, review Anda berhasil disimpan.');
+    }
+
     /**
      * Show user's order history
      */
-    public function history()
+    public function history(Request $request)
     {
-        $pesanans = Pesanan::with(['details.stokBenih', 'pembayaran', 'peternak.user', 'pengambilan'])
-            ->where('pembudidaya_id', Auth::id())
+        $pesanans = Pesanan::with(['details.stokBenih', 'pembayaran', 'peternak.user', 'pengambilan', 'review'])
+            ->where('pembudidaya_id', Auth::id());
+
+        if ($request->filled('tanggal_awal')) {
+            $pesanans->whereDate('created_at', '>=', $request->tanggal_awal);
+        }
+
+        if ($request->filled('tanggal_akhir')) {
+            $pesanans->whereDate('created_at', '<=', $request->tanggal_akhir);
+        }
+
+        $pesanans = $pesanans
             ->orderBy('created_at', 'desc')
-            ->paginate(10);
+            ->paginate(10)
+            ->withQueryString();
 
         return view('front.payment.history', compact('pesanans'));
     }

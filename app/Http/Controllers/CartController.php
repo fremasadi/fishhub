@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Peternak;
 use App\Models\StokBenih;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -110,9 +111,13 @@ class CartController extends Controller
             ? reset($cart)['peternak_name']
             : null;
 
+        $peternak = !empty($cart)
+            ? Peternak::find(reset($cart)['peternak_id'])
+            : null;
+
         $alamatPembudidaya = Auth::user()->pembudidaya->alamat ?? '';
 
-        return view('front.cart.index', compact('cart', 'total', 'peternakName', 'alamatPembudidaya'));
+        return view('front.cart.index', compact('cart', 'total', 'peternakName', 'peternak', 'alamatPembudidaya'));
     }
 
     public function update(Request $request, $id)

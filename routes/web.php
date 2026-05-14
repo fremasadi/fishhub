@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\PesananController as AdminPesananController;
 use App\Http\Controllers\Peternak\PesananController as PeternakPesananController;
 use App\Http\Controllers\Peternak\PengambilanController;
 use App\Http\Controllers\Peternak\ProfileController;
+use App\Http\Controllers\Peternak\LaporanPenjualanController;
 use App\Http\Controllers\Pembudidaya\ProfileController as PembudidayaProfileController;
 
 Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
@@ -33,6 +34,7 @@ Route::middleware(['role:peternak'])->group(function () {
     Route::resource('peternak/benih', StokBenihController::class);
     Route::resource('peternak/pesanan', PeternakPesananController::class)->names('peternak.pesanan');
     Route::get('peternak/pembayaran', [App\Http\Controllers\Peternak\PembayaranController::class, 'index'])->name('peternak.pembayaran.index');
+    Route::get('peternak/laporan-penjualan', [LaporanPenjualanController::class, 'index'])->name('peternak.laporan.penjualan');
 
     Route::get('peternak/pengambilan', [PengambilanController::class, 'index'])->name('peternak.pengambilan.index');
 
@@ -80,6 +82,7 @@ Route::middleware('auth')->group(function () {
 
     // Tandai pesanan selesai oleh pembudidaya
     Route::post('/payment/{pesanan}/selesai', [PaymentController::class, 'selesai'])->name('payment.selesai');
+    Route::post('/payment/{pesanan}/review', [PaymentController::class, 'review'])->name('payment.review');
 
     // Payment finish (redirect from Midtrans)
     Route::get('/payment/finish', [PaymentController::class, 'finish'])->name('payment.finish');
