@@ -175,7 +175,7 @@
                                 </div>
                                 <div class="d-flex justify-content-between mb-2">
                                     <span>Total Ekor:</span>
-                                    <strong>{{ number_format(array_sum(array_column($cart, 'jumlah'))) }} ekor</strong>
+                                    <strong id="total-ekor">{{ number_format(array_sum(array_column($cart, 'jumlah'))) }} ekor</strong>
                                 </div>
                                 <div class="d-flex justify-content-between mb-2">
                                     <span>Subtotal Benih:</span>
@@ -317,6 +317,13 @@ function refreshGrandTotalFinal() {
     const totalBayar = jenisPengiriman === 'diantar' ? baseTotal + ongkirValue : baseTotal;
 
     grandTotalFinal.textContent = 'Rp ' + totalBayar.toLocaleString('id-ID');
+}
+
+function refreshTotalEkor() {
+    const totalEkor = Array.from(document.querySelectorAll('input[id^="qty-"]'))
+        .reduce((total, input) => total + (parseInt(input.value) || 0), 0);
+
+    document.getElementById('total-ekor').textContent = totalEkor.toLocaleString('id-ID') + ' ekor';
 }
 
 function togglePengiriman(value) {
@@ -485,6 +492,7 @@ function updateQuantity(cartId, change, maxStock) {
             document.getElementById('grand-total').textContent = 
                 'Rp ' + data.total.toLocaleString('id-ID');
             baseTotal = data.total;
+            refreshTotalEkor();
             refreshGrandTotalFinal();
         } else {
             alert(data.message);
@@ -582,6 +590,7 @@ function updateQuantityManual(cartId, maxStock, onSuccess = null, sourceInputId 
             document.getElementById('grand-total').textContent = 
                 'Rp ' + data.total.toLocaleString('id-ID');
             baseTotal = data.total;
+            refreshTotalEkor();
             refreshGrandTotalFinal();
             if (onSuccess) {
                 onSuccess();
