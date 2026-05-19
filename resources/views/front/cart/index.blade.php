@@ -114,7 +114,9 @@
                                                        min="100" 
                                                        step="10"
                                                        max="{{ $item['stok_tersedia'] }}"
-                                                       oninput="updateQuantityManualAuto('{{ $id }}', {{ $item['stok_tersedia'] }})">
+                                                       readonly
+                                                       style="cursor: pointer;"
+                                                       onclick="openQuantityDialog('{{ $id }}', {{ $item['stok_tersedia'] }})">
                                                 <button class="btn btn-outline-secondary" 
                                                         type="button"
                                                         onclick="updateQuantity('{{ $id }}', 10, {{ $item['stok_tersedia'] }})">
@@ -258,6 +260,38 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="modal fade" id="quantityModal" tabindex="-1" aria-labelledby="quantityModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="quantityModalLabel">Ganti Jumlah</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                            </div>
+                            <div class="modal-body">
+                                <input type="hidden" id="quantity-modal-cart-id">
+                                <input type="hidden" id="quantity-modal-max-stock">
+
+                                <label for="quantity-modal-input" class="form-label fw-semibold">Jumlah (ekor)</label>
+                                <input type="number"
+                                       class="form-control text-center"
+                                       id="quantity-modal-input"
+                                       min="100"
+                                       step="10"
+                                       onkeydown="if (event.key === 'Enter') { event.preventDefault(); saveQuantityDialog(); }">
+                                <small class="text-muted d-block mt-2" id="quantity-modal-help">
+                                    Minimal 100 ekor dan kelipatan 10.
+                                </small>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                                <button type="button" class="btn btn-primary" onclick="saveQuantityDialog()">
+                                    <i class="fas fa-check"></i> Simpan
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             @endif
         </div>
     </div>
@@ -275,6 +309,7 @@ const peternakLocation = {
 let cartGeocoder = null;
 let cartDistanceService = null;
 let addressDistanceTimer = null;
+let quantityModalInstance = null;
 
 function refreshGrandTotalFinal() {
     const jenisPengiriman = document.getElementById('hidden-jenis').value;
@@ -469,9 +504,42 @@ function updateQuantityManualAuto(cartId, maxStock) {
     }, 500);
 }
 
-function updateQuantityManual(cartId, maxStock) {
+function openQuantityDialog(cartId, maxStock) {
     const qtyInput = document.getElementById('qty-' + cartId);
-    let newQty = parseInt(qtyInput.value);
+    const modalElement = document.getElementById('quantityModal');
+    const modalInput = document.getElementById('quantity-modal-input');
+    const modalHelp = document.getElementById('quantity-modal-help');
+
+    document.getElementById('quantity-modal-cart-id').value = cartId;
+    document.getElementById('quantity-modal-max-stock').value = maxStock;
+    modalInput.value = qtyInput.value;
+    modalInput.max = maxStock;
+    modalHelp.textContent = 'Minimal 100 ekor, kelipatan 10, maksimal ' + maxStock.toLocaleString('id-ID') + ' ekor.';
+
+    quantityModalInstance = bootstrap.Modal.getOrCreateInstance(modalElement);
+    quantityModalInstance.show();
+
+    modalElement.addEventListener('shown.bs.modal', () => {
+        modalInput.focus();
+        modalInput.select();
+    }, { once: true });
+}
+
+function saveQuantityDialog() {
+    const cartId = document.getElementById('quantity-modal-cart-id').value;
+    const maxStock = parseInt(document.getElementById('quantity-modal-max-stock').value);
+
+    updateQuantityManual(cartId, maxStock, () => {
+        if (quantityModalInstance) {
+            quantityModalInstance.hide();
+        }
+    }, 'quantity-modal-input');
+}
+
+function updateQuantityManual(cartId, maxStock, onSuccess = null, sourceInputId = null) {
+    const qtyInput = document.getElementById('qty-' + cartId);
+    const sourceInput = sourceInputId ? document.getElementById(sourceInputId) : qtyInput;
+    let newQty = parseInt(sourceInput.value);
 
     if (Number.isNaN(newQty)) {
         return;
@@ -479,14 +547,21 @@ function updateQuantityManual(cartId, maxStock) {
 
     if (newQty < 100) {
         alert('Minimal pemesanan adalah 100 ekor!');
-        qtyInput.value = 100;
+        sourceInput.value = 100;
         newQty = 100;
     }
 
     if (newQty > maxStock) {
         alert('Stok tidak mencukupi! Maksimal: ' + maxStock.toLocaleString('id-ID') + ' ekor');
-        qtyInput.value = maxStock;
+        sourceInput.value = maxStock;
         newQty = maxStock;
+    }
+
+    if (newQty % 10 !== 0) {
+        alert('Jumlah harus kelipatan 10 ekor!');
+        newQty = Math.round(newQty / 10) * 10;
+        newQty = Math.min(Math.max(newQty, 100), maxStock);
+        sourceInput.value = newQty;
     }
 
     // Update via AJAX
@@ -501,12 +576,16 @@ function updateQuantityManual(cartId, maxStock) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
+            qtyInput.value = newQty;
             document.getElementById('subtotal-' + cartId).textContent = 
                 'Rp ' + data.subtotal.toLocaleString('id-ID');
             document.getElementById('grand-total').textContent = 
                 'Rp ' + data.total.toLocaleString('id-ID');
             baseTotal = data.total;
             refreshGrandTotalFinal();
+            if (onSuccess) {
+                onSuccess();
+            }
         } else {
             alert(data.message);
         }
