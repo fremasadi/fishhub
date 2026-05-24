@@ -11,6 +11,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\Admin\StokBenihController as AdminStokBenihController;
 use App\Http\Controllers\Admin\PesananController as AdminPesananController;
+use App\Http\Controllers\Admin\LaporanPenjualanController as AdminLaporanPenjualanController;
 use App\Http\Controllers\Peternak\PesananController as PeternakPesananController;
 use App\Http\Controllers\Peternak\PengambilanController;
 use App\Http\Controllers\Peternak\ProfileController;
@@ -28,6 +29,7 @@ Route::middleware(['role:admin'])->group(function () {
     Route::get('admin/benih', [AdminStokBenihController::class, 'index'])->name('admin.benih.index');
     Route::resource('admin/pesanan', AdminPesananController::class)->names('admin.pesanan');
     Route::get('admin/pembayaran', [\App\Http\Controllers\Admin\PembayaranController::class, 'index'])->name('admin.pembayaran.index');
+    Route::get('admin/laporan/penjualan', [AdminLaporanPenjualanController::class, 'index'])->name('admin.laporan.penjualan');
 });
 
 Route::middleware(['role:peternak'])->group(function () {

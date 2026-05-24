@@ -98,6 +98,41 @@
     $cartSession = session('cart', []);
     $cartPeternakId = !empty($cartSession) ? reset($cartSession)['peternak_id'] : null;
     $cartPeternakName = !empty($cartSession) ? reset($cartSession)['peternak_name'] : null;
+
+    $kecamatanKotaKediri = [
+        'Kota',
+        'Mojoroto',
+        'Pesantren',
+    ];
+
+    $kecamatanKabupatenKediri = [
+        'Badas',
+        'Banyakan',
+        'Gampengrejo',
+        'Grogol',
+        'Gurah',
+        'Kandangan',
+        'Kandat',
+        'Kayen Kidul',
+        'Kepung',
+        'Kras',
+        'Kunjang',
+        'Mojo',
+        'Ngadiluwih',
+        'Ngancar',
+        'Ngasem',
+        'Pagu',
+        'Papar',
+        'Pare',
+        'Plemahan',
+        'Plosoklaten',
+        'Puncu',
+        'Purwoasri',
+        'Ringinrejo',
+        'Semen',
+        'Tarokan',
+        'Wates',
+    ];
 @endphp
 
     @if (session('success'))
@@ -362,7 +397,7 @@
         </div>
 
         <div class="row justify-content-center mb-4">
-            <div class="col-md-6">
+            <div class="col-md-5 mb-3 mb-md-0">
                 <label for="filter-peternak-map" class="form-label fw-semibold">
                     <i class="fas fa-filter"></i> Filter Peternak
                 </label>
@@ -371,6 +406,24 @@
                     @foreach($peternaks as $peternak)
                         <option value="{{ $peternak->id }}">{{ $peternak->user->name }}</option>
                     @endforeach
+                </select>
+            </div>
+            <div class="col-md-5">
+                <label for="filter-kecamatan-map" class="form-label fw-semibold">
+                    <i class="fas fa-map-pin"></i> Filter Kecamatan
+                </label>
+                <select id="filter-kecamatan-map" class="form-control" onchange="filterKecamatanMap(this.value)">
+                    <option value="">Semua Kecamatan</option>
+                    <optgroup label="Kota Kediri">
+                        @foreach($kecamatanKotaKediri as $kecamatan)
+                            <option value="{{ $kecamatan }}">{{ $kecamatan }}</option>
+                        @endforeach
+                    </optgroup>
+                    <optgroup label="Kabupaten Kediri">
+                        @foreach($kecamatanKabupatenKediri as $kecamatan)
+                            <option value="{{ $kecamatan }}">{{ $kecamatan }}</option>
+                        @endforeach
+                    </optgroup>
                 </select>
             </div>
         </div>
@@ -434,7 +487,7 @@
 </div>
 
 <!-- Modal Detail Review Peternak -->
-@foreach($stokBenihs->pluck('peternak')->filter()->unique('id') as $peternakReview)
+@foreach($stokBenihs->pluck('peternak')->merge($peternaks)->filter()->unique('id') as $peternakReview)
     @if($peternakReview->reviews->count() > 0)
         <div class="modal fade" id="reviewModal-{{ $peternakReview->id }}" tabindex="-1"
              aria-labelledby="reviewModalLabel-{{ $peternakReview->id }}" aria-hidden="true">
@@ -529,6 +582,10 @@
 
         let map;
         const peternakMarkers = [];
+        const mapFilters = {
+            peternakId: '',
+            kecamatan: '',
+        };
 
         function escapeHtml(value) {
             return String(value ?? '-')
@@ -541,6 +598,50 @@
 
         function formatRupiah(value) {
             return 'Rp ' + Number(value ?? 0).toLocaleString('id-ID');
+        }
+
+        function getPeternakRating(reviews) {
+            const reviewList = Array.isArray(reviews) ? reviews : [];
+            const totalRating = reviewList.reduce((total, review) => total + Number(review.rating ?? 0), 0);
+
+            return {
+                count: reviewList.length,
+                average: reviewList.length ? totalRating / reviewList.length : 0,
+            };
+        }
+
+        function renderStars(rating) {
+            const roundedRating = Math.round(Number(rating ?? 0));
+
+            return Array.from({ length: 5 }, (_, index) => {
+                const iconClass = index + 1 <= roundedRating ? 'fas' : 'far';
+                const mutedClass = index + 1 <= roundedRating ? '' : ' review-star-muted';
+
+                return `<i class="${iconClass} fa-star${mutedClass}"></i>`;
+            }).join('');
+        }
+
+        function renderPeternakRating(peternak) {
+            const rating = getPeternakRating(peternak.reviews);
+
+            if (rating.count === 0) {
+                return `
+                    <div class="small text-muted mb-2">
+                        <span class="text-warning">${renderStars(0)}</span>
+                        <span class="ms-1">Belum ada review</span>
+                    </div>
+                `;
+            }
+
+            return `
+                <button type="button" class="review-rating-btn small mb-2"
+                        onclick="openReviewModal(${Number(peternak.id)})">
+                    ${renderStars(rating.average)}
+                    <span class="text-muted ms-1">
+                        ${rating.average.toFixed(1)} (${rating.count} review)
+                    </span>
+                </button>
+            `;
         }
 
         function renderStokBenihList(stokBenihs) {
@@ -577,6 +678,50 @@
             `;
         }
 
+        function normalizeText(value) {
+            return String(value ?? '')
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/[^a-z0-9]+/g, ' ')
+                .trim();
+        }
+
+        function peternakMatchesKecamatan(peternak, kecamatan) {
+            if (!kecamatan) {
+                return true;
+            }
+
+            const address = normalizeText(peternak.alamat);
+            const district = normalizeText(kecamatan);
+            const explicitDistrictPatterns = [
+                `kecamatan ${district}`,
+                `kec ${district}`,
+            ];
+
+            if (explicitDistrictPatterns.some(pattern => address.includes(pattern))) {
+                return true;
+            }
+
+            if (district === 'kota') {
+                return false;
+            }
+
+            return ` ${address} `.includes(` ${district} `);
+        }
+
+        function applyPeternakMapFilters() {
+            peternakMarkers.forEach(({ marker, peternak }) => {
+                const matchesPeternak = !mapFilters.peternakId ||
+                    String(peternak.id) === String(mapFilters.peternakId);
+                const matchesKecamatan = peternakMatchesKecamatan(peternak, mapFilters.kecamatan);
+
+                marker.setVisible(matchesPeternak && matchesKecamatan);
+            });
+
+            setMapBoundsByMarkers(peternakMarkers.map(item => item.marker));
+        }
+
         function setMapBoundsByMarkers(markers) {
             const visibleMarkers = markers.filter(marker => marker.getVisible());
 
@@ -598,11 +743,13 @@
         }
 
         function filterPeternakMap(peternakId) {
-            peternakMarkers.forEach(({ marker, peternak }) => {
-                marker.setVisible(!peternakId || String(peternak.id) === String(peternakId));
-            });
+            mapFilters.peternakId = peternakId;
+            applyPeternakMapFilters();
+        }
 
-            setMapBoundsByMarkers(peternakMarkers.map(item => item.marker));
+        function filterKecamatanMap(kecamatan) {
+            mapFilters.kecamatan = kecamatan;
+            applyPeternakMapFilters();
         }
 
         function initMap() {
@@ -661,6 +808,7 @@
                     content: `
                     <div style="min-width:260px; max-width:320px;">
                         <h6 class="fw-bold mb-1">${escapeHtml(peternak.user?.name)}</h6>
+                        ${renderPeternakRating(peternak)}
                         <p class="mb-1 small text-muted">
                             <i class="fas fa-map-marker-alt"></i> ${escapeHtml(peternak.alamat)}
                         </p>

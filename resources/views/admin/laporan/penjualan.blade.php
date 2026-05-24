@@ -45,13 +45,13 @@
         <div class="d-sm-flex align-items-center justify-content-between mb-4">
             <div>
                 <h1 class="h3 mb-1 text-gray-800">Laporan Penjualan</h1>
-                <p class="text-muted mb-0">Rekap penjualan benih dari pesanan yang pembayarannya berhasil.</p>
+                <p class="text-muted mb-0">Rekap seluruh penjualan benih dari pesanan yang pembayarannya berhasil.</p>
                 @if($isPrint)
                     <p class="text-muted small mb-0">Dicetak pada {{ now()->format('d M Y H:i') }}</p>
                 @endif
             </div>
             @unless($isPrint)
-                <a href="{{ route('peternak.laporan.penjualan', array_merge(request()->except('page'), ['print' => 1])) }}"
+                <a href="{{ route('admin.laporan.penjualan', array_merge(request()->except('page'), ['print' => 1])) }}"
                     target="_blank" class="btn btn-danger btn-sm no-print">
                     <i class="fas fa-file-pdf"></i> Cetak PDF
                 </a>
@@ -60,7 +60,7 @@
 
         <div class="card shadow mb-4 no-print">
             <div class="card-body">
-                <form method="GET" action="{{ route('peternak.laporan.penjualan') }}" class="row g-3 align-items-end">
+                <form method="GET" action="{{ route('admin.laporan.penjualan') }}" class="row g-3 align-items-end">
                     <div class="col-md-3">
                         <label class="form-label small fw-semibold">Tanggal Awal</label>
                         <input type="date" name="tanggal_awal" class="form-control form-control-sm"
@@ -71,11 +71,22 @@
                         <input type="date" name="tanggal_akhir" class="form-control form-control-sm"
                             value="{{ request('tanggal_akhir') }}">
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold">Peternak</label>
+                        <select name="peternak_id" class="form-control form-control-sm">
+                            <option value="">Semua Peternak</option>
+                            @foreach($peternaks as $peternak)
+                                <option value="{{ $peternak->id }}" {{ request('peternak_id') == $peternak->id ? 'selected' : '' }}>
+                                    {{ $peternak->user->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-3">
                         <button type="submit" class="btn btn-primary btn-sm">
                             <i class="fas fa-filter"></i> Filter
                         </button>
-                        <a href="{{ route('peternak.laporan.penjualan') }}" class="btn btn-secondary btn-sm">
+                        <a href="{{ route('admin.laporan.penjualan') }}" class="btn btn-secondary btn-sm">
                             Reset
                         </a>
                     </div>
@@ -84,7 +95,7 @@
         </div>
 
         <div class="row">
-            <div class="col-xl-4 col-md-6 mb-4">
+            <div class="col-xl-3 col-md-6 mb-4">
                 <div class="card border-left-success shadow h-100 py-2">
                     <div class="card-body">
                         <div class="row no-gutters align-items-center">
@@ -104,7 +115,7 @@
                 </div>
             </div>
 
-            <div class="col-xl-4 col-md-6 mb-4">
+            <div class="col-xl-3 col-md-6 mb-4">
                 <div class="card border-left-primary shadow h-100 py-2">
                     <div class="card-body">
                         <div class="row no-gutters align-items-center">
@@ -124,7 +135,7 @@
                 </div>
             </div>
 
-            <div class="col-xl-4 col-md-6 mb-4">
+            <div class="col-xl-3 col-md-6 mb-4">
                 <div class="card border-left-info shadow h-100 py-2">
                     <div class="card-body">
                         <div class="row no-gutters align-items-center">
@@ -143,6 +154,66 @@
                     </div>
                 </div>
             </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-warning shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                    Peternak Terjual
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                    {{ number_format($totalPeternak) }} peternak
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-user-tie fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Rekap Per Peternak</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Peternak</th>
+                                <th class="text-center">Total Pesanan</th>
+                                <th class="text-center">Terjual</th>
+                                <th class="text-end">Total Penjualan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($rekapPeternak as $item)
+                                <tr>
+                                    <td>{{ $loop->iteration }}</td>
+                                    <td class="fw-semibold">{{ $item->nama_peternak }}</td>
+                                    <td class="text-center">{{ number_format($item->total_pesanan) }}</td>
+                                    <td class="text-center">{{ number_format($item->total_qty) }} ekor</td>
+                                    <td class="text-end fw-bold text-success">
+                                        Rp {{ number_format($item->total_penjualan, 0, ',', '.') }}
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-4">
+                                        Belum ada data penjualan pada periode ini.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
 
         <div class="card shadow mb-4">
@@ -155,6 +226,7 @@
                         <thead class="table-light">
                             <tr>
                                 <th>#</th>
+                                <th>Peternak</th>
                                 <th>Jenis Benih</th>
                                 <th>Ukuran</th>
                                 <th>Kualitas</th>
@@ -167,6 +239,7 @@
                             @forelse($rekapBenih as $item)
                                 <tr>
                                     <td>{{ $loop->iteration }}</td>
+                                    <td>{{ $item->nama_peternak }}</td>
                                     <td class="fw-semibold">{{ $item->jenis }}</td>
                                     <td>{{ $item->ukuran }}</td>
                                     <td>{{ $item->kualitas }}</td>
@@ -178,7 +251,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="text-center text-muted py-4">
+                                    <td colspan="8" class="text-center text-muted py-4">
                                         Belum ada data penjualan pada periode ini.
                                     </td>
                                 </tr>
@@ -200,6 +273,7 @@
                             <tr>
                                 <th>#</th>
                                 <th>Tanggal</th>
+                                <th>Peternak</th>
                                 <th>Pembudidaya</th>
                                 <th>Benih</th>
                                 <th class="text-center">Qty</th>
@@ -218,6 +292,7 @@
                                         @endif
                                     </td>
                                     <td>{{ $detail->pesanan?->tanggal_pesan?->format('d M Y') ?? '-' }}</td>
+                                    <td>{{ $detail->pesanan?->peternak?->user?->name ?? '-' }}</td>
                                     <td>{{ $detail->pesanan?->pembudidaya?->name ?? '-' }}</td>
                                     <td>
                                         <div class="fw-semibold">{{ $detail->stokBenih?->jenis ?? '-' }}</div>
@@ -233,7 +308,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="text-center text-muted py-4">
+                                    <td colspan="8" class="text-center text-muted py-4">
                                         Belum ada detail penjualan.
                                     </td>
                                 </tr>

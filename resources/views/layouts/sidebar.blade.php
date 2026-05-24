@@ -82,6 +82,13 @@
                 <span>Pembayaran</span>
             </a>
         </li>
+
+        <li class="nav-item {{ request()->routeIs('admin.laporan.*') ? 'active' : '' }}">
+            <a class="nav-link" href="{{ route('admin.laporan.penjualan') }}">
+                <i class="fas fa-fw fa-chart-line"></i>
+                <span>Laporan Penjualan</span>
+            </a>
+        </li>
     @endif
 
     @if (Auth::check() && Auth::user()->role === 'peternak')

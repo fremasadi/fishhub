@@ -13,6 +13,7 @@ class LaporanPenjualanController extends Controller
     public function index(Request $request)
     {
         $peternak = Auth::user()->peternak;
+        $isPrint = $request->boolean('print');
 
         if (!$peternak) {
             abort(403, 'Profil peternak tidak ditemukan.');
@@ -56,14 +57,17 @@ class LaporanPenjualanController extends Controller
             ->orderByDesc('total_penjualan')
             ->get();
 
-        $detailPenjualan = (clone $baseQuery)
+        $detailPenjualanQuery = (clone $baseQuery)
             ->with(['pesanan.pembudidaya', 'pesanan.pembayaran', 'stokBenih'])
-            ->latest()
-            ->paginate(10)
-            ->withQueryString();
+            ->latest();
+
+        $detailPenjualan = $isPrint
+            ? $detailPenjualanQuery->get()
+            : $detailPenjualanQuery->paginate(10)->withQueryString();
 
         return view('peternak.laporan.penjualan', compact(
             'detailPenjualan',
+            'isPrint',
             'rekapBenih',
             'totalPenjualan',
             'totalBenihTerjual',
