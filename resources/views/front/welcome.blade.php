@@ -397,7 +397,7 @@
         </div>
 
         <div class="row justify-content-center mb-4">
-            <div class="col-md-5 mb-3 mb-md-0">
+            <div class="col-md-4 mb-3 mb-md-0">
                 <label for="filter-peternak-map" class="form-label fw-semibold">
                     <i class="fas fa-filter"></i> Filter Peternak
                 </label>
@@ -408,7 +408,7 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-5">
+            <div class="col-md-4 mb-3 mb-md-0">
                 <label for="filter-kecamatan-map" class="form-label fw-semibold">
                     <i class="fas fa-map-pin"></i> Filter Kecamatan
                 </label>
@@ -424,6 +424,22 @@
                             <option value="{{ $kecamatan }}">{{ $kecamatan }}</option>
                         @endforeach
                     </optgroup>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="filter-jenis-benih-map" class="form-label fw-semibold">
+                    <i class="fas fa-fish"></i> Filter Jenis Benih
+                </label>
+                <select id="filter-jenis-benih-map" class="form-control" onchange="filterJenisBenihMap(this.value)">
+                    <option value="">Semua Jenis Benih</option>
+                    <option value="Ikan Lele">Ikan Lele</option>
+                    <option value="Ikan Nila">Ikan Nila</option>
+                    <option value="Ikan Mujair">Ikan Mujair</option>
+                    <option value="Ikan Gurame">Ikan Gurame</option>
+                    <option value="Ikan Patin">Ikan Patin</option>
+                    <option value="Ikan Mas">Ikan Mas</option>
+                    <option value="Ikan Bawal Air Tawar">Bawal Air Tawar</option>
+                    <option value="Ikan Lainnya">Lainnya</option>
                 </select>
             </div>
         </div>
@@ -585,6 +601,7 @@
         const mapFilters = {
             peternakId: '',
             kecamatan: '',
+            jenisBenih: '',
         };
 
         function escapeHtml(value) {
@@ -710,13 +727,25 @@
             return ` ${address} `.includes(` ${district} `);
         }
 
+        function peternakMatchesJenisBenih(peternak, jenisBenih) {
+            if (!jenisBenih) {
+                return true;
+            }
+
+            const stocks = Array.isArray(peternak.stok_benihs) ? peternak.stok_benihs : [];
+            const selectedType = normalizeText(jenisBenih);
+
+            return stocks.some(stok => normalizeText(stok.jenis) === selectedType);
+        }
+
         function applyPeternakMapFilters() {
             peternakMarkers.forEach(({ marker, peternak }) => {
                 const matchesPeternak = !mapFilters.peternakId ||
                     String(peternak.id) === String(mapFilters.peternakId);
                 const matchesKecamatan = peternakMatchesKecamatan(peternak, mapFilters.kecamatan);
+                const matchesJenisBenih = peternakMatchesJenisBenih(peternak, mapFilters.jenisBenih);
 
-                marker.setVisible(matchesPeternak && matchesKecamatan);
+                marker.setVisible(matchesPeternak && matchesKecamatan && matchesJenisBenih);
             });
 
             setMapBoundsByMarkers(peternakMarkers.map(item => item.marker));
@@ -749,6 +778,11 @@
 
         function filterKecamatanMap(kecamatan) {
             mapFilters.kecamatan = kecamatan;
+            applyPeternakMapFilters();
+        }
+
+        function filterJenisBenihMap(jenisBenih) {
+            mapFilters.jenisBenih = jenisBenih;
             applyPeternakMapFilters();
         }
 
